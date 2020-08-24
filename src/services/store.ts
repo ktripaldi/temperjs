@@ -41,8 +41,13 @@ export function isArray(element: unknown): boolean {
   return typeof element !== 'undefined' && Array.isArray(element)
 }
 
-export function isObject(element: unknown): boolean {
-  return element !== null && typeof element === 'object' && !isArray(element)
+export function isPlainObject(element: unknown): boolean {
+  return (
+    typeof element === 'object' &&
+    element !== null &&
+    element.constructor === Object &&
+    Object.prototype.toString.call(element) === '[object Object]'
+  )
 }
 
 function log(
@@ -149,7 +154,7 @@ function getStoreActions(): StoreActions {
         .get(path)
         ?.reduce(
           (obj, key) =>
-            isObject(obj) || isArray(obj)
+            isPlainObject(obj) || isArray(obj)
               ? ((obj as Record<string | number, unknown>)[key] as unknown)
               : undefined,
           store.traits as unknown
@@ -200,7 +205,7 @@ function getStoreActions(): StoreActions {
       store.subjects.set(path, createSubject())
       store.paths.set(path, arrayPath)
     }
-    if (isObject(traitValue)) {
+    if (isPlainObject(traitValue)) {
       Object.keys(traitValue as object).forEach(key => {
         createSubjects(
           `${path}${store.pathSeparator}${key}`,
@@ -231,7 +236,7 @@ function getStoreActions(): StoreActions {
       if (!compare(nodePreviousValue, nodeValue)) {
         const subject = store.subjects.get(nodePath)
         if (subject?.hasObservers()) subject?.sink.next(nodeValue)
-        if (isObject(nodeValue)) {
+        if (isPlainObject(nodeValue)) {
           Object.keys(nodeValue as object).forEach(key => {
             broadcastChangeToChildren(
               `${nodePath}${store.pathSeparator}${key}`,
@@ -243,7 +248,7 @@ function getStoreActions(): StoreActions {
       }
     }
     broadcastChangeToParents(path)
-    if (isObject(value)) {
+    if (isPlainObject(value)) {
       Object.keys(value as object).forEach(key => {
         broadcastChangeToChildren(
           `${path}${store.pathSeparator}${key}`,
