@@ -37,8 +37,7 @@
     "lint": "eslint --ext ts src"
   },
   "peerDependencies": {
-    "react": "^16.13.1",
-    "react-test-renderer": "^16.13.1"
+    "react": "^16.13.1"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
