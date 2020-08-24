@@ -14,10 +14,12 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - run: yarn
       - run: yarn build
+      - run: yarn test
+      - run: yarn lint
       - run: yarn publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  create-release:
+  release:
     needs: publish
     runs-on: ubuntu-latest
     steps:
