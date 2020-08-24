@@ -225,7 +225,13 @@ function getStoreActions(): StoreActions {
     function broadcastChangeToParents(path: string): void {
       executeCallbackForEveryChild(path, key => {
         const subject = store.subjects.get(key)
-        if (subject?.hasObservers()) subject?.sink.next(resolveTrait(key))
+        const traitValue = resolveTrait(key)
+        if (subject?.hasObservers())
+          subject?.sink.next(
+            key !== path || isPlainObject(traitValue)
+              ? { ...(traitValue as object) }
+              : traitValue
+          )
       })
     }
     function broadcastChangeToChildren(
@@ -235,8 +241,12 @@ function getStoreActions(): StoreActions {
     ) {
       if (!compare(nodePreviousValue, nodeValue)) {
         const subject = store.subjects.get(nodePath)
-        if (subject?.hasObservers()) subject?.sink.next(nodeValue)
-        if (isPlainObject(nodeValue)) {
+        const isNodePlainObject = isPlainObject(nodeValue)
+        if (subject?.hasObservers())
+          subject?.sink.next(
+            isNodePlainObject ? { ...(nodeValue as object) } : nodeValue
+          )
+        if (isNodePlainObject) {
           Object.keys(nodeValue as object).forEach(key => {
             broadcastChangeToChildren(
               `${nodePath}${store.pathSeparator}${key}`,
