@@ -50,12 +50,8 @@ export function isPlainObject(element: unknown): boolean {
   )
 }
 
-function log(
-  logPrefix: string,
-  logMessage: string,
-  logValue: unknown | string = ''
-): void {
-  if (store.debug) console.log(`${logPrefix} ${logMessage}`, logValue) // tslint:disable-line:no-console
+function log(logMessage: string, logValue: unknown | string = ''): void {
+  if (store.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
 }
 
 declare global {
@@ -81,11 +77,7 @@ function getStoreActions(): StoreActions {
           if (rootTrait) {
             createSubjects(storageKey, [store.size], rootTrait)
             store.traits.push(rootTrait)
-            log(
-              '⬇️',
-              `<${storageKey}> has been imported from storage:`,
-              rootTrait
-            )
+            log(`⬇️ <${storageKey}> has been imported from storage:`, rootTrait)
           }
         }
       } else
@@ -102,15 +94,11 @@ function getStoreActions(): StoreActions {
         if (typeof storageValue !== 'undefined') {
           if (storageValue !== 'function') {
             store.storageService.set(storageKey, storageValue)
-            log(
-              '⬆️',
-              `<${storageKey}> has been saved to storage:`,
-              storageValue
-            )
+            log(`⬆️ <${storageKey}> has been saved to storage:`, storageValue)
           }
         } else {
           store.storageService.clear(storageKey)
-          log('⏹️', `<${storageKey}> has been removed from storage.`)
+          log(`⏹️ <${storageKey}> has been removed from storage.`)
         }
       } else
         throw new Error(
@@ -171,8 +159,7 @@ function getStoreActions(): StoreActions {
         const tiedTraitValue = resolveTrait(tiedTraitPath)
         subject?.sink.next(tiedTraitValue)
         log(
-          '*️⃣',
-          `<${tiedTraitPath}> has been updated based on <${getPathRootKey(
+          `*️⃣ <${tiedTraitPath}> has been updated based on <${getPathRootKey(
             path
           )}>:`,
           tiedTraitValue
@@ -296,7 +283,7 @@ function getStoreActions(): StoreActions {
       createSubjects(rootPath!, [store.size], trait)
       store.traits.push(trait)
     }
-    log('🆕', `<${path}> has been created:`, value)
+    log(`🆕 <${path}> has been created:`, value)
     trySavingToStorage(rootPath!, trait)
   }
 
@@ -314,7 +301,7 @@ function getStoreActions(): StoreActions {
       if (index < arrayPath.length - 1) traits = (traits as any)[key]
       else (traits as any)[key] = newMergedValue
     })
-    log('🔄', `<${path}> has been updated:`, newMergedValue)
+    log(`🔄 <${path}> has been updated:`, newMergedValue)
     // We need to notify all subscribers about the update
     broadcastChange(path, previousValue, newMergedValue)
     // If we have selectors that depend on this Trait, we need to dispatch the updated value for each one of them
