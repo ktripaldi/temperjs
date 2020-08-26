@@ -1,6 +1,5 @@
 import * as React from 'react'
-import useTraitValue from './useTraitValue'
-import setTrait from '../actions/setTrait'
+import { useTraitValue, setTrait } from '..'
 
 /**
  * `useTrait` returns an array of two elements:

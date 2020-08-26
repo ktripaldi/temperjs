@@ -1,4 +1,5 @@
-import storeActions, { SetterHelpers } from '../services/store'
+import storeActions from '../services/store'
+import { SetterHelpers } from '..'
 
 /**
  * `setTrait` creates a globally shared unit of state that components can subscribe to
