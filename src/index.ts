@@ -3,4 +3,9 @@ export { default as getTrait } from './actions/getTrait'
 export { default as setTrait } from './actions/setTrait'
 export { default as useTrait } from './hooks/useTrait'
 export { default as useTraitValue } from './hooks/useTraitValue'
-export { SetterHelpers } from './services/store'
+export {
+  Subscription,
+  SetterHelpers,
+  StorageService,
+  StoreOptions
+} from './services/store'

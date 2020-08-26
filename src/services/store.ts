@@ -3,12 +3,14 @@ import compare from '../utils/compare'
 import deepMerge from '../utils/deepMerge'
 import createSubject, { Subject, Subscription } from '../utils/rxSubject'
 
+export { Subject, Subscription } from '../utils/rxSubject'
+
 export interface SetterHelpers<T> {
   value: T
   get(path: string): unknown
 }
 
-interface StorageService {
+export interface StorageService {
   set: (key: string, value: unknown) => void
   get: (key: string) => unknown
   clear: (key: string) => unknown
