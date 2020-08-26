@@ -30,7 +30,7 @@
     "clean": "rimraf lib dist es coverage types",
     "check-types": "tsc --noEmit",
     "build": "rollup -c",
-    "test": "jest --config jestconfig.json",
+    "test": "jest --config jestconfig.json --silent",
     "test:watch": "yarn run test --watchAll",
     "test:cov": "yarn run test --coverage",
     "format": "prettier --write \"src/**/*.ts\" \"**/*.md\"",

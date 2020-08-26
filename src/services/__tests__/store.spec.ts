@@ -12,7 +12,6 @@ const randomValues = [
 ]
 
 describe('The Store', () => {
-  beforeAll(() => spyOn(console, 'error'))
   beforeEach(() => {
     storeActions.create()
     // Sets some supporting Traits
