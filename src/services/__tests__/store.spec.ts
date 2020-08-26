@@ -63,6 +63,28 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath1.testPath2')).toEqual(testValue)
   })
 
+  it(`should log when a Trait is set, if you have the debug enabled`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    // Here we create a new store with the debug enabled
+    storeActions.create({ debug: true })
+    const testValue = 'testValue'
+    // Root Trait
+    storeActions.setTrait<typeof testValue>('testPath', testValue)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.TRAIT_CREATED, 'testPath'),
+      testValue
+    )
+    // Sub Trait
+    storeActions.setTrait<typeof testValue>('testPath1.testPath2', testValue)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.TRAIT_CREATED, 'testPath'),
+      testValue
+    )
+    consoleSpy.mockClear()
+  })
+
   it('should update the Trait value, if the Trait already exists', () => {
     // With an immutable value
     const testValue1 = 'testValue1'
@@ -76,6 +98,33 @@ describe('The Store', () => {
     const testValue4 = { key1: { key2: 'testValue4' } }
     storeActions.setTrait<typeof testValue4>('testTraitPath2', testValue4)
     expect(storeActions.getTrait('testTraitPath2')).toEqual(testValue4)
+  })
+
+  it(`should log when a Trait is updated, if you have the debug enabled`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    // Here we create a new store with the debug enabled
+    storeActions.create({ debug: true })
+    // With an immutable value
+    const testValue1 = 'testValue1'
+    storeActions.setTrait<typeof testValue1>('testTraitPath1', testValue1)
+    const testValue2 = 'testValue2'
+    storeActions.setTrait<typeof testValue2>('testTraitPath1', testValue2)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.TRAIT_UPDATED, 'testTraitPath1'),
+      testValue2
+    )
+    // With a mutable value
+    const testValue3 = { key1: { key2: 'testValue3' } }
+    storeActions.setTrait<typeof testValue3>('testTraitPath2', testValue3)
+    const testValue4 = { key1: { key2: 'testValue4' } }
+    storeActions.setTrait<typeof testValue4>('testTraitPath2', testValue4)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.TRAIT_UPDATED, 'testTraitPath2'),
+      testValue4
+    )
+    consoleSpy.mockClear()
   })
 
   it('should do nothing, if you try to update an existing Trait with the same value', () => {
@@ -152,7 +201,7 @@ describe('The Store', () => {
     ).toEqual(testValue)
   })
 
-  it('should create a selector, if TraitValue is a callback', () => {
+  it('should create a selector and dispatch its updates, if TraitValue is a callback that refers another Trait', () => {
     // Some test values
     const testValue1 = 5
     const testValue2 = 10
@@ -198,6 +247,35 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testTraitPath2')).toEqual(
       testValue2 * multiplier
     )
+  })
+
+  it('should log when a selector is updated, if you have the debug enabled', () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    // Here we create a new store with the debug enabled
+    storeActions.create({ debug: true })
+    // Some test values
+    const testValue1 = 5
+    const testValue2 = 10
+    const multiplier = 2
+    storeActions.setTrait<typeof testValue1>('baseTraitPath', testValue1)
+    storeActions.setTrait<number>(
+      'selectorTraitPath',
+      ({ get }: SetterHelpers<number>) =>
+        (get('baseTraitPath') as number) * multiplier
+    )
+    storeActions.subscribeToTrait('selectorTraitPath', () => {})
+    storeActions.setTrait<typeof testValue2>('baseTraitPath', testValue2)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(
+        MESSAGES.LOGS.SELECTOR_UPDATED,
+        'selectorTraitPath',
+        'baseTraitPath'
+      ),
+      testValue2 * multiplier
+    )
+    consoleSpy.mockClear()
   })
 
   it(`should throw an error, if you try to create a selector based on a Trait that doesn't exist`, () => {
@@ -345,5 +423,66 @@ describe('The Store', () => {
     expect(() =>
       storeActions.setTrait<undefined>('testTraitPath', undefined)
     ).toThrow(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
+  })
+
+  it(`should log when a Trait is retrieved from the storage, if you have the debug enabled and a storage service set`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    const testStoredValue = 'testStoredValue'
+    const storageService = {
+      get: jest.fn().mockReturnValue(testStoredValue),
+      set: jest.fn(),
+      clear: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService, debug: true })
+    storeActions.getTrait('testTraitPath')
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.STORAGE_IMPORTED, 'testTraitPath'),
+      testStoredValue
+    )
+    consoleSpy.mockClear()
+  })
+
+  it(`should log when a Trait is saved to the storage, if you have the debug enabled and a storage service set`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    const testStoredValue = 'testStoredValue'
+    const storageService = {
+      get: jest.fn().mockReturnValue(testStoredValue),
+      set: jest.fn(),
+      clear: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService, debug: true })
+    const testValue = 'testValue'
+    storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.STORAGE_SAVED, 'testTraitPath'),
+      testValue
+    )
+    consoleSpy.mockClear()
+  })
+
+  it(`should log when a Trait is removed from the storage, if you have the debug enabled and a storage service set`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const consoleSpy = jest.spyOn(console, 'log')
+    const testStoredValue = 'testStoredValue'
+    const storageService = {
+      get: jest.fn().mockReturnValue(testStoredValue),
+      set: jest.fn(),
+      clear: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService, debug: true })
+    storeActions.setTrait<undefined>('testTraitPath', undefined)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.STORAGE_REMOVED, 'testTraitPath'),
+      ''
+    )
+    consoleSpy.mockClear()
   })
 })

@@ -97,7 +97,7 @@ function getStoreActions(): StoreActions {
           if (rootTrait) {
             createSubjects(storageKey, [store.size], rootTrait)
             store.traits.push(rootTrait)
-            log(`⬇️ <${storageKey}> has been imported from storage:`, rootTrait)
+            log(format(MESSAGES.LOGS.STORAGE_IMPORTED, storageKey), rootTrait)
           }
         }
       } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
@@ -111,13 +111,13 @@ function getStoreActions(): StoreActions {
         if (storageValue !== 'function') {
           if (store.storageService.set) {
             store.storageService.set(storageKey, storageValue)
-            log(`⬆️ <${storageKey}> has been saved to storage:`, storageValue)
+            log(format(MESSAGES.LOGS.STORAGE_SAVED, storageKey), storageValue)
           } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET)
         }
       } else {
         if (store.storageService.clear) {
           store.storageService.clear(storageKey)
-          log(`⏹️ <${storageKey}> has been removed from storage.`)
+          log(format(MESSAGES.LOGS.STORAGE_REMOVED, storageKey))
         } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
       }
     }
@@ -175,9 +175,7 @@ function getStoreActions(): StoreActions {
         const tiedTraitValue = resolveTrait(tiedTraitPath)
         subject?.sink.next(tiedTraitValue)
         log(
-          `*️⃣ <${tiedTraitPath}> has been updated based on <${getPathRootKey(
-            path
-          )}>:`,
+          format(MESSAGES.LOGS.SELECTOR_UPDATED, tiedTraitPath, path),
           tiedTraitValue
         )
       }
@@ -299,7 +297,7 @@ function getStoreActions(): StoreActions {
       createSubjects(rootPath!, [store.size], trait)
       store.traits.push(trait)
     }
-    log(`🆕 <${path}> has been created:`, value)
+    log(format(MESSAGES.LOGS.TRAIT_CREATED, path), value)
     trySavingToStorage(rootPath!, trait)
   }
 
@@ -317,7 +315,7 @@ function getStoreActions(): StoreActions {
       if (index < arrayPath.length - 1) traits = (traits as any)[key]
       else (traits as any)[key] = newMergedValue
     })
-    log(`🔄 <${path}> has been updated:`, newMergedValue)
+    log(format(MESSAGES.LOGS.TRAIT_UPDATED, path), newMergedValue)
     // We need to notify all subscribers about the update
     broadcastChange(path, previousValue, newMergedValue)
     // If we have selectors that depend on this Trait, we need to dispatch the updated value for each one of them
