@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { useTraitValue, setTrait } from '..'
+import { useTraitValue, setTrait, SetterHelpers } from '..'
 
 /**
  * `useTrait` returns an array of two elements:
@@ -14,7 +14,8 @@ function useTrait<T>(path: string): [T, (traitValue: T) => void] {
   return [
     useTraitValue<T>(path),
     React.useCallback(
-      (traitValue: T): void => setTrait<T>(path, traitValue),
+      (traitValue: T | ((helpers: SetterHelpers<T>) => T)): void =>
+        setTrait<T>(path, traitValue),
       []
     )
   ]
