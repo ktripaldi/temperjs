@@ -17,7 +17,7 @@ function useTraitValue<T>(path: string): T {
     return () => {
       subscription?.unsubscribe()
     }
-  }, [path])
+  }, [])
 
   return trait
 }
