@@ -181,6 +181,7 @@ function getStoreActions(): StoreActions {
           tiedTraitValue
         )
       }
+      updateSelectors(tiedTraitPath)
     })
   }
 

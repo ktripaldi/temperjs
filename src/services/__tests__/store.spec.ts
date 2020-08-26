@@ -211,6 +211,7 @@ describe('The Store', () => {
     // Some test values
     const testValue1 = 5
     const testValue2 = 10
+    const testValue3 = 15
     const multiplier = 2
     storeActions.setTrait<typeof testValue1>('basePath1', testValue1)
     storeActions.setTrait<typeof testValue1>('basePath2.basePath3', testValue1)
@@ -224,8 +225,14 @@ describe('The Store', () => {
     )
     // Since `testPath1` is a selector, it is expected to return its value based on the one of `basePath1`
     expect(storeActions.getTrait('testPath1')).toEqual(testValue1 * multiplier)
+    let testState1
+    const callback1 = (value: unknown) => (testState1 = value)
+    storeActions.subscribeToTrait<number>('testPath1', callback1)
     // If `basePath1` value changes, `testPath1` is expected to update accordingly
     storeActions.setTrait<typeof testValue2>('basePath1', testValue2)
+    // We can verify this reading the subscribed variable
+    expect(testState1).toEqual(testValue2 * multiplier)
+    // Or retrieving the updated value directly from the store
     expect(storeActions.getTrait('testPath1')).toEqual(testValue2 * multiplier)
 
     // Selector based on Trait `basePath2//basePath`
@@ -236,9 +243,37 @@ describe('The Store', () => {
     )
     // Since `testPath2` is a selector, it is expected to return its value based on the one of `basePath2//basePath`
     expect(storeActions.getTrait('testPath2')).toEqual(testValue1 * multiplier)
-    // If `basePath1` value changes, `testPath2` is expected to update accordingly
+    let testState2
+    const callback2 = (value: unknown) => (testState2 = value)
+    storeActions.subscribeToTrait<number>('testPath2', callback2)
+    // If `basePath2.basePath3` value changes, `testPath2` is expected to update accordingly
     storeActions.setTrait<typeof testValue2>('basePath2.basePath3', testValue2)
+    // We can verify this reading the subscribed variable
+    expect(testState2).toEqual(testValue2 * multiplier)
+    // Or retrieving the updated value directly from the store
     expect(storeActions.getTrait('testPath2')).toEqual(testValue2 * multiplier)
+
+    // Selector based on Selector `testPath2`
+    storeActions.setTrait<number>(
+      'testPath3',
+      ({ get }: SetterHelpers<number>) =>
+        Math.pow(get('testPath2') as number, 2)
+    )
+    // Since `testPath3` is a selector, it is expected to return its value based on the one of `testPath3`
+    expect(storeActions.getTrait('testPath3')).toEqual(
+      Math.pow(testValue2 * multiplier, 2)
+    )
+    let testState3
+    const callback3 = (value: unknown) => (testState3 = value)
+    storeActions.subscribeToTrait<number>('testPath3', callback3)
+    // If `basePath2.basePath3` value changes, `testPath2`, hence `testPath3` too, are expected to update accordingly
+    storeActions.setTrait<typeof testValue3>('basePath2.basePath3', testValue3)
+    // We can verify this reading the subscribed variable
+    expect(testState3).toEqual(Math.pow(testValue3 * multiplier, 2))
+    // Or retrieving the updated value directly from the store
+    expect(storeActions.getTrait('testPath3')).toEqual(
+      Math.pow(testValue3 * multiplier, 2)
+    )
   })
 
   it(`should log when a selector is updated, if you have the debug enabled`, () => {
