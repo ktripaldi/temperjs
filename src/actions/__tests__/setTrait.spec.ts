@@ -8,27 +8,29 @@ describe('The action `setTrait`', () => {
 
   it(`should throw an error, if no path is specified`, () => {
     expect(() => {
+      const testValue = false
       // @ts-ignore
-      setTrait({ testValue: 'testValue' })
+      setTrait<typeof testValue>(testValue)
     }).toThrowError()
   })
 
   it(`should throw an error, if path is an empty a string`, () => {
     expect(() => {
-      setTrait('', 'testValue')
+      const testValue = 'testValue'
+      setTrait<typeof testValue>('', testValue)
     }).toThrowError()
   })
 
   it(`should set the Trait value`, () => {
     const testValue = 'testValue'
-    setTrait('testTraitPath', testValue)
+    setTrait<typeof testValue>('testTraitPath', testValue)
     expect(storeActions.getTrait('testTraitPath')).toEqual(testValue)
   })
 
   it(`should update the Trait value, if traitValue is an updater`, () => {
     const testValue = 'testValue'
-    storeActions.setTrait('testTraitPath', testValue)
-    setTrait('testTraitPath', ({ value }: SetterHelpers<string>) =>
+    storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
+    setTrait<string>('testTraitPath', ({ value }: SetterHelpers<string>) =>
       value.toUpperCase()
     )
     expect(storeActions.getTrait('testTraitPath')).toEqual(
@@ -38,7 +40,7 @@ describe('The action `setTrait`', () => {
 
   it(`should automatically create the wrapping objects if the the dot notation is used`, () => {
     const testValue = 'testValue'
-    setTrait('testTraitPath.testKey', testValue)
+    setTrait<typeof testValue>('testTraitPath.testKey', testValue)
     expect(storeActions.getTrait('testTraitPath')).toEqual({
       testKey: testValue
     })
@@ -49,12 +51,15 @@ describe('The action `setTrait`', () => {
     const testValue1 = 5
     const testValue2 = 10
     const multiplier = 2
-    storeActions.setTrait('baseTraitPath1', testValue1)
-    storeActions.setTrait('baseTraitPath2.baseTraitPath3', testValue1)
+    storeActions.setTrait<typeof testValue1>('baseTraitPath1', testValue1)
+    storeActions.setTrait<typeof testValue1>(
+      'baseTraitPath2.baseTraitPath3',
+      testValue1
+    )
 
     // We'll create two selectors, one based on Trait `baseTraitPath1` and another one based on Trait `baseTraitPath2.baseTraitPath3`
     // Selector based on Trait `baseMoodKey1`
-    setTrait(
+    setTrait<number>(
       'testTraitPath1',
       ({ get }: SetterHelpers<number>) =>
         (get('baseTraitPath1') as number) * multiplier
@@ -64,13 +69,13 @@ describe('The action `setTrait`', () => {
       testValue1 * multiplier
     )
     // If `baseTraitPath1` value changes, `testTraitPath1` is expected to update accordingly
-    storeActions.setTrait('baseTraitPath1', testValue2)
+    storeActions.setTrait<typeof testValue2>('baseTraitPath1', testValue2)
     expect(storeActions.getTrait('testTraitPath1')).toEqual(
       testValue2 * multiplier
     )
 
     // Selector based on Trait `baseTraitPath2.baseTraitPath3`
-    setTrait(
+    setTrait<number>(
       'testMoodKey2',
       ({ get }: SetterHelpers<number>) =>
         (get('baseTraitPath2.baseTraitPath3') as number) * multiplier
@@ -80,7 +85,10 @@ describe('The action `setTrait`', () => {
       testValue1 * multiplier
     )
     // If `baseTraitPath2` value changes, `testMoodKey2` is expected to update accordingly
-    storeActions.setTrait('baseTraitPath2.baseTraitPath3', testValue2)
+    storeActions.setTrait<typeof testValue2>(
+      'baseTraitPath2.baseTraitPath3',
+      testValue2
+    )
     expect(storeActions.getTrait('testMoodKey2')).toEqual(
       testValue2 * multiplier
     )
