@@ -1,4 +1,5 @@
 import storeActions, { SetterHelpers } from '../../services/store' // We will call `storeActions` methods directly to check the results of `setTrait`
+import MESSAGES from '../../config/messages'
 import setTrait from '../setTrait'
 
 describe('The action `setTrait`', () => {
@@ -11,14 +12,14 @@ describe('The action `setTrait`', () => {
       const testValue = false
       // @ts-ignore
       setTrait<typeof testValue>(testValue)
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
   it(`should throw an error, if path is an empty a string`, () => {
     expect(() => {
       const testValue = 'testValue'
       setTrait<typeof testValue>('', testValue)
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.PATH_EMPTY_STRING)
   })
 
   it(`should set the Trait value`, () => {

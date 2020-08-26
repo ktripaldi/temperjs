@@ -1,3 +1,4 @@
+import MESSAGES from '../config/messages'
 import compare from '../utils/compare'
 import deepMerge from '../utils/deepMerge'
 import createSubject, { Subject, Subscription } from '../utils/rxSubject'
@@ -58,6 +59,17 @@ export function isPlainObject(element: unknown): boolean {
   )
 }
 
+export function format(message: string, ...replacements: string[]): string {
+  let formattedString: string = message
+  for (var replacement in replacements) {
+    formattedString = formattedString.replace(
+      new RegExp('\\{' + replacement + '\\}', 'g'),
+      replacements[replacement]
+    )
+  }
+  return formattedString
+}
+
 function log(logMessage: string, logValue: unknown | string = ''): void {
   if (store.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
 }
@@ -88,30 +100,26 @@ function getStoreActions(): StoreActions {
             log(`⬇️ <${storageKey}> has been imported from storage:`, rootTrait)
           }
         }
-      } else
-        throw new Error(
-          `Your storage service must implement a method to retrieve a persisted Trait.`
-        )
+      } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
     }
   }
 
   // Saves the value of a Trait to an external service storage, if configured
   function trySavingToStorage(storageKey: string, storageValue: unknown): void {
     if (store.storageService) {
-      if (store.storageService.set) {
-        if (typeof storageValue !== 'undefined') {
-          if (storageValue !== 'function') {
+      if (typeof storageValue !== 'undefined') {
+        if (storageValue !== 'function') {
+          if (store.storageService.set) {
             store.storageService.set(storageKey, storageValue)
             log(`⬆️ <${storageKey}> has been saved to storage:`, storageValue)
-          }
-        } else {
+          } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET)
+        }
+      } else {
+        if (store.storageService.clear) {
           store.storageService.clear(storageKey)
           log(`⏹️ <${storageKey}> has been removed from storage.`)
-        }
-      } else
-        throw new Error(
-          `Your storage service must implement a method to persist a Trait.`
-        )
+        } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
+      }
     }
   }
 
@@ -326,9 +334,7 @@ function getStoreActions(): StoreActions {
     const trait = getRawTrait(path)
     if (typeof tiedTraitPath !== 'undefined') {
       if (typeof trait === 'undefined') {
-        throw new Error(
-          `Trait ${path} doesn't exist and you cannot depend on it`
-        )
+        throw new Error(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, path))
       }
       store.tiedTraits.set(path, getTiedTraits(path).add(tiedTraitPath)) // `tiedTraits` keeps track for each Trait of all the selectors that depend on them
       store.selectors.add(tiedTraitPath) // `selectors` is a dictionary of all selectors
@@ -369,7 +375,12 @@ function getStoreActions(): StoreActions {
         typeof currentValue !== typeof newValue
       ) {
         throw new Error(
-          `Trait ${path} has been initialized as <${typeof currentValue}> and cannot receive a <${typeof newValue}> update`
+          format(
+            MESSAGES.ERRORS.TRAIT_WRONG_TYPE,
+            path,
+            typeof currentValue,
+            typeof newValue
+          )
         )
       }
     }
@@ -380,11 +391,11 @@ function getStoreActions(): StoreActions {
   function checkPath(path?: string): void {
     // `path` must be a string
     if (typeof path !== 'string') {
-      throw new Error(`Trait needs a string path to be accessed`)
+      throw new Error(MESSAGES.ERRORS.PATH_NO_STRING)
     }
     // `path` cannot be an empty string because that's how the user refers to the Trait
     if (path === '') {
-      throw new Error(`Trait cannot be accessed with an empty path`)
+      throw new Error(MESSAGES.ERRORS.PATH_EMPTY_STRING)
     }
   }
 
@@ -412,10 +423,7 @@ function getStoreActions(): StoreActions {
 
   // Returns the value of a Trait
   function getTrait<T>(path: string): T {
-    if (!global.store)
-      throw new Error(
-        `No store found. You need to wrap your root component using the 'withTemper()' hoc.`
-      )
+    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     return resolveTrait<T>(path)
   }
@@ -425,10 +433,7 @@ function getStoreActions(): StoreActions {
     path: string,
     traitValue: T | ((helpers: SetterHelpers<T>) => T)
   ): void {
-    if (!global.store)
-      throw new Error(
-        `No store found. You need to wrap your root component using the 'withTemper()' hoc.`
-      )
+    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     const [currentValue, newValue] = processTraitValue(path, traitValue)
     // If the Trait value doesn't change, we won't need to do anything
@@ -451,14 +456,11 @@ function getStoreActions(): StoreActions {
     path: string,
     callback: (traitValue: T) => void
   ): Subscription | undefined {
-    if (!global.store)
-      throw new Error(
-        `No store found. You need to wrap your root component using the 'withTemper()' hoc.`
-      )
+    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     // `callback` must be a function
     if (typeof callback !== 'function') {
-      throw new Error(`Trait cannot be subscribed without a callback`)
+      throw new Error(MESSAGES.ERRORS.SUBSCRIPTION_NO_CALLBACK)
     } else if (!traitExists(path)) {
       initializeTrait(path, undefined)
     }

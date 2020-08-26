@@ -1,4 +1,4 @@
-import storeActions, { SetterHelpers } from '../store'
+import storeActions, { format, SetterHelpers } from '../store'
 import MESSAGES from '../../config/messages'
 
 const randomValues = [
@@ -20,18 +20,37 @@ describe('The Store', () => {
   })
   afterEach(() => storeActions.destroy())
 
-  it('should throw an error, if you try to set a Trait with no path', () => {
+  it('should throw an error, if you try to set or get a Trait with no path', () => {
     expect(() => {
       // @ts-ignore
       storeActions.setTrait<unknown>()
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
+    expect(() => {
+      // @ts-ignore
+      storeActions.getTrait()
+    }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
-  it('should throw an error, if you try to set a Trait with an empty path', () => {
+  it('should throw an error, if you try to set or get a Trait with an empty path', () => {
     expect(() => {
       const testValue = 'testValue'
       storeActions.setTrait<typeof testValue>('', testValue)
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.PATH_EMPTY_STRING)
+    expect(() => {
+      storeActions.getTrait('')
+    }).toThrow(MESSAGES.ERRORS.PATH_EMPTY_STRING)
+  })
+
+  it(`should throw an error, if you try to set or get a Trait without creating the store`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const testValue = 'testValue'
+    expect(() =>
+      storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
+    ).toThrow(MESSAGES.ERRORS.NO_STORE_FOUND)
+    expect(() => storeActions.getTrait('testTraitPath')).toThrow(
+      MESSAGES.ERRORS.NO_STORE_FOUND
+    )
   })
 
   it('should create a new Trait and set its value, if the Trait does not exist', () => {
@@ -86,7 +105,14 @@ describe('The Store', () => {
         'testTraitPath',
         differentTypeValue
       )
-    }).toThrowError()
+    }).toThrow(
+      format(
+        MESSAGES.ERRORS.TRAIT_WRONG_TYPE,
+        'testTraitPath',
+        typeof baseValue,
+        typeof differentTypeValue
+      )
+    )
   })
 
   it('should let you set to `undefined` the value of an existing Trait', () => {
@@ -174,17 +200,43 @@ describe('The Store', () => {
     )
   })
 
+  it(`should throw an error, if you try to create a selector based on a Trait that doesn't exist`, () => {
+    expect(() =>
+      storeActions.setTrait<unknown>(
+        'wrongSelector',
+        (helpers: SetterHelpers<unknown>) => helpers.get('nonExisitingTrait')
+      )
+    ).toThrow(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, 'nonExisitingTrait'))
+  })
+
+  it('should throw an error, if you try to subscribe to a Trait with with no path', () => {
+    const testValue = 'testValue'
+    storeActions.setTrait<typeof testValue>('testTraitPath', 'testValue')
+    expect(() => {
+      // @ts-ignore
+      storeActions.subscribeToTrait<unknown>(() => {})
+    }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
+  })
+
   it('should throw an error, if you try to subscribe to a Trait with an empty path', () => {
     expect(() => {
       storeActions.subscribeToTrait<unknown>('', () => {})
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.PATH_EMPTY_STRING)
   })
 
   it('should throw an error, if you try to subscribe to a Trait with no callback', () => {
     expect(() => {
       // @ts-ignore
       storeActions.subscribeToTrait<unknown>('testTraitPath')
-    }).toThrowError()
+    }).toThrow(MESSAGES.ERRORS.SUBSCRIPTION_NO_CALLBACK)
+  })
+
+  it(`should throw an error, if you try to subscribe to a Trait without creating the store`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    expect(() =>
+      storeActions.subscribeToTrait<unknown>('testTraitPath', () => {})
+    ).toThrow(MESSAGES.ERRORS.NO_STORE_FOUND)
   })
 
   it('should let you subscribe to a Trait', () => {
@@ -248,5 +300,50 @@ describe('The Store', () => {
     // When a trait is set to undefined, it should call the storage service to clear the value
     storeActions.setTrait<undefined>('testTraitPath', undefined)
     expect(storageService.clear).toHaveBeenCalled()
+  })
+
+  it(`should throw an error, if you set a storage service without a 'get' method and try to get a Trait that doesn't exist`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const storageService = {
+      set: jest.fn(),
+      clear: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService })
+    expect(() => storeActions.getTrait('testTraitPath')).toThrow(
+      MESSAGES.ERRORS.STORAGE_MISS_GET
+    )
+  })
+
+  it(`should throw an error, if you set a storage service without a 'set' method and try to set a Trait`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const testStoredValue = 'testStoredValue'
+    const storageService = {
+      get: jest.fn().mockReturnValue(testStoredValue),
+      clear: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService })
+    expect(() => {
+      const testValue = 'testValue'
+      storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
+    }).toThrow(MESSAGES.ERRORS.STORAGE_MISS_SET)
+  })
+
+  it(`should throw an error, if you set a storage service without a 'set' method and try to clear a Trait`, () => {
+    // A default store is created before each test, so we need to destroy it first
+    storeActions.destroy()
+    const testStoredValue = 'testStoredValue'
+    const storageService = {
+      get: jest.fn().mockReturnValue(testStoredValue),
+      set: jest.fn()
+    }
+    // @ts-ignore Here we create a new store with the storage service
+    storeActions.create({ storageService })
+    expect(() =>
+      storeActions.setTrait<undefined>('testTraitPath', undefined)
+    ).toThrow(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
   })
 })

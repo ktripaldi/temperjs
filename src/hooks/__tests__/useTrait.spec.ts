@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks'
 import storeActions from '../../services/store' // We will call `storeActions` methods directly to check the results of `useTrait`
+import MESSAGES from '../../config/messages'
 import useTrait from '../useTrait'
 
 describe('useTrait', () => {
@@ -11,16 +12,12 @@ describe('useTrait', () => {
   it(`should throw an error, if no path is specified`, () => {
     // @ts-ignore
     const { result } = renderHook(() => useTrait())
-    expect(result.error.message).toEqual(
-      'Trait needs a string path to be accessed'
-    )
+    expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
   it('should throw an error, if path is an empty a string', () => {
     const { result } = renderHook(() => useTrait(''))
-    expect(result.error.message).toEqual(
-      'Trait cannot be accessed with an empty path'
-    )
+    expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_EMPTY_STRING)
   })
 
   it('should return an array of two elements, the Trait value and an updater function', () => {
