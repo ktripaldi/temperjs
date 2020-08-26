@@ -15,12 +15,12 @@ describe('useTrait', () => {
     expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
-  it('should throw an error, if path is an empty a string', () => {
+  it(`should throw an error, if path is an empty a string`, () => {
     const { result } = renderHook(() => useTrait(''))
     expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_EMPTY_STRING)
   })
 
-  it('should return an array of two elements, the Trait value and an updater function', () => {
+  it(`should return an array of two elements, the Trait value and an updater function`, () => {
     const testValue1 = 'testValue1'
     storeActions.setTrait<typeof testValue1>('testTraitPath', testValue1)
     const { result } = renderHook(() => useTrait('testTraitPath'))

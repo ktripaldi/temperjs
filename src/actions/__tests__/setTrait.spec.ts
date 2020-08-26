@@ -47,7 +47,7 @@ describe('The action `setTrait`', () => {
     })
   })
 
-  it('should create a selector, if traitValue is a callback', () => {
+  it(`should create a selector, if traitValue is a callback`, () => {
     // Some test values
     const testValue1 = 5
     const testValue2 = 10

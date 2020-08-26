@@ -37,7 +37,7 @@ const randomValues = [
 describe('The Store', () => {
   afterEach(() => storeActions.destroy())
 
-  it('should throw an error, if you try to set or get a Trait with no path', () => {
+  it(`should throw an error, if you try to set or get a Trait with no path`, () => {
     storeActions.create()
     expect(() => {
       // @ts-ignore
@@ -49,7 +49,7 @@ describe('The Store', () => {
     }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
-  it('should throw an error, if you try to set or get a Trait with an empty path', () => {
+  it(`should throw an error, if you try to set or get a Trait with an empty path`, () => {
     storeActions.create()
     expect(() => {
       const testValue = 'testValue'
@@ -70,7 +70,7 @@ describe('The Store', () => {
     )
   })
 
-  it('should create a new Trait and set its value, if the Trait does not exist', () => {
+  it(`should create a new Trait and set its value, if the Trait does not exist`, () => {
     storeActions.create()
     const testValue = 'testValue'
     // Root Trait
@@ -100,7 +100,7 @@ describe('The Store', () => {
     consoleSpy.mockClear()
   })
 
-  it('should update the Trait value, if the Trait already exists', () => {
+  it(`should update the Trait value, if the Trait already exists`, () => {
     storeActions.create()
     // With an immutable value
     const testValue1 = 'testValue1'
@@ -140,7 +140,7 @@ describe('The Store', () => {
     consoleSpy.mockClear()
   })
 
-  it('should do nothing, if you try to update an existing Trait with the same value', () => {
+  it(`should do nothing, if you try to update an existing Trait with the same value`, () => {
     storeActions.create()
     storeActions.setTrait<number>('baseTraitPath1', 1)
     randomValues.forEach((testValue, index) => {
@@ -160,7 +160,7 @@ describe('The Store', () => {
     })
   })
 
-  it('should throw an error, if you try to change the type of an existing Trait', () => {
+  it(`should throw an error, if you try to change the type of an existing Trait`, () => {
     storeActions.create()
     const baseValue = 'testValue'
     const differentTypeValue = false
@@ -180,7 +180,7 @@ describe('The Store', () => {
     )
   })
 
-  it('should let you set to `undefined` the value of an existing Trait', () => {
+  it(`should let you set to 'undefined' the value of an existing Trait`, () => {
     storeActions.create()
     const testValue = 'testValue'
     storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
@@ -188,7 +188,7 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testTraitPath')).toEqual(undefined)
   })
 
-  it('should update the Trait value, if TraitValue is an updater', () => {
+  it(`should update the Trait value, if TraitValue is an updater`, () => {
     storeActions.create()
     const testValue = 'testValue'
     storeActions.setTrait<typeof testValue>('testTraitPath', testValue)
@@ -201,7 +201,7 @@ describe('The Store', () => {
     )
   })
 
-  it('should let you set an alternative path separator', () => {
+  it(`should let you set an alternative path separator`, () => {
     storeActions.create({ pathSeparator: '>' })
     const testValue = 'testValue'
     storeActions.setTrait<typeof testValue>(
@@ -216,7 +216,7 @@ describe('The Store', () => {
     ).toEqual(testValue)
   })
 
-  it('should create a selector and dispatch its updates, if TraitValue is a callback that refers another Trait', () => {
+  it(`should create a selector and dispatch its updates, if TraitValue is a callback that refers another Trait`, () => {
     storeActions.create()
     // Some test values
     const testValue1 = 5
@@ -265,7 +265,7 @@ describe('The Store', () => {
     )
   })
 
-  it('should log when a selector is updated, if you have the debug enabled', () => {
+  it(`should log when a selector is updated, if you have the debug enabled`, () => {
     const consoleSpy = jest.spyOn(console, 'log')
     storeActions.create({ debug: true })
     // Some test values
@@ -301,7 +301,7 @@ describe('The Store', () => {
     ).toThrow(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, 'nonExisitingTrait'))
   })
 
-  it('should throw an error, if you try to subscribe to a Trait with with no path', () => {
+  it(`should throw an error, if you try to subscribe to a Trait with with no path`, () => {
     storeActions.create()
     const testValue = 'testValue'
     storeActions.setTrait<typeof testValue>('testTraitPath', 'testValue')
@@ -311,14 +311,14 @@ describe('The Store', () => {
     }).toThrow(MESSAGES.ERRORS.PATH_NO_STRING)
   })
 
-  it('should throw an error, if you try to subscribe to a Trait with an empty path', () => {
+  it(`should throw an error, if you try to subscribe to a Trait with an empty path`, () => {
     storeActions.create()
     expect(() => {
       storeActions.subscribeToTrait<unknown>('', () => {})
     }).toThrow(MESSAGES.ERRORS.PATH_EMPTY_STRING)
   })
 
-  it('should throw an error, if you try to subscribe to a Trait with no callback', () => {
+  it(`should throw an error, if you try to subscribe to a Trait with no callback`, () => {
     storeActions.create()
     expect(() => {
       // @ts-ignore
@@ -332,7 +332,7 @@ describe('The Store', () => {
     ).toThrow(MESSAGES.ERRORS.NO_STORE_FOUND)
   })
 
-  it('should let you subscribe to a Trait', () => {
+  it(`should let you subscribe to a Trait`, () => {
     storeActions.create()
     // With an immutable value
     const testValue1 = 'testValue'
@@ -360,7 +360,7 @@ describe('The Store', () => {
     expect(testState2).toEqual(testValue4)
   })
 
-  it('should let you subscribe to a non existing Trait', () => {
+  it(`should let you subscribe to a non existing Trait`, () => {
     storeActions.create()
     let testState
     const callback = (value: unknown) => (testState = value)
@@ -370,7 +370,7 @@ describe('The Store', () => {
     expect(testState).toEqual(testValue)
   })
 
-  it('should let you set a storage service', () => {
+  it(`should let you set a storage service`, () => {
     const storageService = mockStorageService()
     // @ts-ignore
     storeActions.create({ storageService })
