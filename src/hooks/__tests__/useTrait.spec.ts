@@ -1,35 +1,20 @@
-import { act, renderHook } from '@testing-library/react-hooks'
+import { renderHook } from '@testing-library/react-hooks'
 import storeActions from '../../services/store' // We will call `storeActions` methods directly to check the results of `useTrait`
-import MESSAGES from '../../config/messages'
 import useTrait from '../useTrait'
+import useTraitValue from '../useTraitValue'
 
 describe('useTrait', () => {
-  beforeAll(() => {
+  it(`should return an array of two elements, the result of useTraitValue and a reference to setTrait`, () => {
     storeActions.create()
-    spyOn(console, 'error')
-  })
-
-  it(`should throw an error, if no path is specified`, () => {
-    // @ts-ignore
-    const { result } = renderHook(() => useTrait())
-    expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_NO_STRING)
-  })
-
-  it(`should throw an error, if path is an empty a string`, () => {
-    const { result } = renderHook(() => useTrait(''))
-    expect(result.error.message).toEqual(MESSAGES.ERRORS.PATH_EMPTY_STRING)
-  })
-
-  it(`should return an array of two elements, the Trait value and an updater function`, () => {
-    const testValue1 = 'testValue1'
-    storeActions.setTrait<typeof testValue1>('testTraitPath', testValue1)
-    const { result } = renderHook(() => useTrait('testTraitPath'))
-    const [traitValue, traitUpdater] = result.current
-    expect(traitValue).toEqual(testValue1)
-    expect(typeof traitUpdater).toBe('function')
-    const testValue2 = 'testValue2'
-    act(() => traitUpdater(testValue2))
-    const updatedTraitValue = result.current[0]
-    expect(updatedTraitValue).toEqual(testValue2)
+    const testValue = 'testValue'
+    const { result: result1 } = renderHook(() => useTrait('testPath'))
+    const { result: result2 } = renderHook(() => useTraitValue('testPath'))
+    expect(Array.isArray(result1.current)).toBeTruthy()
+    expect(result1.current.length).toEqual(2)
+    expect(result1.current[0]).toEqual(result2.current)
+    expect(typeof result1.current[1] === 'function').toBeTruthy()
+    console.log(result1.current[1](testValue))
+    result1.current[1](testValue) // This should the same as calling setTrait('testPath', ...)
+    expect(storeActions.getTrait('testPath')).toEqual(testValue)
   })
 })
