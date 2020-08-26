@@ -49,7 +49,9 @@ describe('The hook `useTraitValue`', () => {
         (get('testPath1') as string).toUpperCase()
     )
     const { result } = renderHook(() => useTraitValue('testPath2'))
-    storeActions.setTrait('testPath1', testValue2)
+    act(() => {
+      storeActions.setTrait('testPath1', testValue2)
+    })
     expect(result.current).toEqual(testValue2.toUpperCase())
   })
 })
