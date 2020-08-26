@@ -1,4 +1,4 @@
-import storeActions from '../services/store';
+import storeActions, { SetterHelpers } from '../services/store'
 
 /**
  * `setTrait` creates a globally shared unit of state that components can subscribe to
@@ -10,8 +10,11 @@ import storeActions from '../services/store';
  * When you create a Trait, you can target any level of an object using the dot notation (ex. level1.level2)
  * `setTrait(level1.level2, value)` will create a trait with this value: `{ level1 : { level2 : value }}`
  */
-function setTrait<T>(path: string, traitValue: T): void {
-  storeActions.setTrait<T>(path, traitValue);
+function setTrait<T>(
+  path: string,
+  traitValue: T | ((helpers: SetterHelpers<T>) => T)
+): void {
+  storeActions.setTrait<T>(path, traitValue)
 }
 
-export default setTrait;
+export default setTrait

@@ -2,6 +2,11 @@ import compare from '../utils/compare'
 import deepMerge from '../utils/deepMerge'
 import createSubject, { Subject, Subscription } from '../utils/rxSubject'
 
+export interface SetterHelpers<T> {
+  value: T
+  get(path: string): unknown
+}
+
 interface StorageService {
   set: (key: string, value: unknown) => void
   get: (key: string) => unknown
@@ -29,7 +34,10 @@ interface Store {
 interface StoreActions {
   create(options?: StoreOptions): void
   getTrait<T>(path: string): T
-  setTrait<T>(path: string, traitValue: T): void
+  setTrait<T>(
+    path: string,
+    traitValue: T | ((helpers: SetterHelpers<T>) => T)
+  ): void
   subscribeToTrait<T>(
     path: string,
     callback: (traitValue: T) => void
@@ -413,7 +421,10 @@ function getStoreActions(): StoreActions {
   }
 
   // Sets the value of a Trait
-  function setTrait<T>(path: string, traitValue: T): void {
+  function setTrait<T>(
+    path: string,
+    traitValue: T | ((helpers: SetterHelpers<T>) => T)
+  ): void {
     if (!global.store)
       throw new Error(
         `No store found. You need to wrap your root component using the 'withTemper()' hoc.`

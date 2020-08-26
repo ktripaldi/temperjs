@@ -1,4 +1,4 @@
-import storeActions from '../../services/store' // We will call `storeActions` methods directly to check the results of `setTrait`
+import storeActions, { SetterHelpers } from '../../services/store' // We will call `storeActions` methods directly to check the results of `setTrait`
 import setTrait from '../setTrait'
 
 describe('The action `setTrait`', () => {
@@ -28,7 +28,7 @@ describe('The action `setTrait`', () => {
   it(`should update the Trait value, if traitValue is an updater`, () => {
     const testValue = 'testValue'
     storeActions.setTrait('testTraitPath', testValue)
-    setTrait('testTraitPath', ({ value }: { value: string }) =>
+    setTrait('testTraitPath', ({ value }: SetterHelpers<string>) =>
       value.toUpperCase()
     )
     expect(storeActions.getTrait('testTraitPath')).toEqual(
@@ -56,8 +56,8 @@ describe('The action `setTrait`', () => {
     // Selector based on Trait `baseMoodKey1`
     setTrait(
       'testTraitPath1',
-      ({ get }: { get: (path: string) => number }) =>
-        get('baseTraitPath1') * multiplier
+      ({ get }: SetterHelpers<number>) =>
+        (get('baseTraitPath1') as number) * multiplier
     )
     // Since `testTraitPath1` is a selector, it is expected to return its value based on the one of `baseTraitPath1`
     expect(storeActions.getTrait('testTraitPath1')).toEqual(
@@ -72,8 +72,8 @@ describe('The action `setTrait`', () => {
     // Selector based on Trait `baseTraitPath2.baseTraitPath3`
     setTrait(
       'testMoodKey2',
-      ({ get }: { get: (path: string) => number }) =>
-        get('baseTraitPath2.baseTraitPath3') * multiplier
+      ({ get }: SetterHelpers<number>) =>
+        (get('baseTraitPath2.baseTraitPath3') as number) * multiplier
     )
     // Since `testMoodKey2` is a selector, it is expected to return its value based on the one of `baseTraitPath2//baseTraitPath3`
     expect(storeActions.getTrait('testMoodKey2')).toEqual(

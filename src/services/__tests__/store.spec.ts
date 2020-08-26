@@ -1,4 +1,5 @@
-import storeActions from '../store'
+import storeActions, { SetterHelpers } from '../store'
+import MESSAGES from '../../config/messages'
 
 const randomValues = [
   'test',
@@ -7,7 +8,7 @@ const randomValues = [
   [1, 2, 3],
   false,
   null,
-  ({ get }: { get: (path: string) => number }) => get('baseTraitPath1') * 2
+  ({ get }: SetterHelpers<number>) => (get('baseTraitPath1') as number) * 2
 ]
 
 describe('The Store', () => {
@@ -85,7 +86,7 @@ describe('The Store', () => {
   it('should update the Trait value, if TraitValue is an updater', () => {
     const testValue = 'testValue'
     storeActions.setTrait('testTraitPath', testValue)
-    storeActions.setTrait('testTraitPath', ({ value }: { value: string }) =>
+    storeActions.setTrait('testTraitPath', ({ value }: SetterHelpers<string>) =>
       value.toUpperCase()
     )
     expect(storeActions.getTrait('testTraitPath')).toEqual(
@@ -123,8 +124,8 @@ describe('The Store', () => {
     // Selector based on Trait `baseTraitPath1`
     storeActions.setTrait(
       'testTraitPath1',
-      ({ get }: { get: (path: string) => number }) =>
-        get('baseTraitPath1') * multiplier
+      ({ get }: SetterHelpers<number>) =>
+        (get('baseTraitPath1') as number) * multiplier
     )
     // Since `testTraitPath1` is a selector, it is expected to return its value based on the one of `baseTraitPath1`
     expect(storeActions.getTrait('testTraitPath1')).toEqual(
@@ -139,8 +140,8 @@ describe('The Store', () => {
     // Selector based on Trait `baseTraitPath2//baseTraitPath`
     storeActions.setTrait(
       'testTraitPath2',
-      ({ get }: { get: (path: string) => number }) =>
-        get('baseTraitPath2.baseTraitPath3') * multiplier
+      ({ get }: SetterHelpers<number>) =>
+        (get('baseTraitPath2.baseTraitPath3') as number) * multiplier
     )
     // Since `testTraitPath2` is a selector, it is expected to return its value based on the one of `baseTraitPath2//baseTraitPath`
     expect(storeActions.getTrait('testTraitPath2')).toEqual(
