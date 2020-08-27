@@ -82,6 +82,24 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath1.testPath2')).toEqual(testValue)
   })
 
+  it(`should create a new Trait by passing a callback`, () => {
+    storeActions.create()
+    const testValue = 5
+    const testCallback = () => Math.pow(testValue, 2)
+    storeActions.setTrait<number>('testPath', testCallback)
+    expect(storeActions.getTrait('testPath')).toEqual(Math.pow(testValue, 2))
+  })
+
+  it(`should create a new Trait by passing an async callback`, () => {
+    storeActions.create()
+    const testValue = 5
+    const testPromise = new Promise(resolve => resolve(testValue))
+    const testCallback = async (): Promise<number> =>
+      Math.pow((await testPromise) as number, 2)
+    storeActions.setTrait<Promise<number>>('testPath', testCallback)
+    expect(storeActions.getTrait('testPath') instanceof Promise).toBeTruthy()
+  })
+
   it(`should log when a Trait is set, if you have the debug enabled`, () => {
     const consoleSpy = jest.spyOn(console, 'log')
     storeActions.create({ debug: true })
