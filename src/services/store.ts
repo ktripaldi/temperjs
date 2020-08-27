@@ -40,7 +40,7 @@ interface Store {
 
 interface StoreActions {
   create(options?: StoreOptions): void
-  getTrait<T>(path: string): T
+  getTrait<T>(path: string): T | undefined
   setTrait<T>(
     path: string,
     traitValue: T | ((helpers: SetterHelpers<T>) => T)
@@ -428,7 +428,7 @@ function getStoreActions(): StoreActions {
   }
 
   // Returns the value of a Trait
-  function getTrait<T>(path: string): T {
+  function getTrait<T>(path: string): T | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     return resolveTrait<T>(path)

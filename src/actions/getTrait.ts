@@ -7,8 +7,8 @@ import storeActions from '../services/store';
  * You can target any level of an object using the dot notation (ex. level1.level2.level3)
  * @returns {T} Returns the current value of the Trait
  */
-function getTrait<T>(path: string): T {
-  return storeActions.getTrait(path);
+function getTrait<T>(path: string): T | undefined {
+  return storeActions.getTrait(path)
 }
 
 export default getTrait;
