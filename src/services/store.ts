@@ -26,13 +26,18 @@ export interface StoreOptions {
   debug?: boolean
 }
 
+interface ResolveTraitOptions {
+  getSelectorCached?: boolean
+  tiedPath?: string
+}
+
 interface Store {
   paths: Map<string, (string | number)[]>
   pathSeparator: string
   traits: unknown[]
   subjects: Map<string, Subject<unknown>>
   tiedTraits: Map<string, Set<string>>
-  selectors: Set<string>
+  selectors: Map<string, unknown>
   storageService: StorageService | undefined
   debug: boolean
   size: number
@@ -135,6 +140,11 @@ function getStoreActions(): StoreActions {
     return isArray(store.paths.get(path))
   }
 
+  // Check if a Trait is a selector
+  function isSelector(path: string): boolean {
+    return store.selectors.has(path)
+  }
+
   // Returns the index of a root Trait
   function getRootTraitIndex(path: string): number | undefined {
     const index = store.paths.get(getPathRootKey(path))
@@ -176,17 +186,20 @@ function getStoreActions(): StoreActions {
   // Updates all selectors
   function updateSelectors(path: string): void {
     const tiedTraits = getTiedTraits(path)
-    tiedTraits.forEach(tiedTraitPath => {
-      const subject = store.subjects.get(tiedTraitPath)
+    tiedTraits.forEach(tiedPath => {
+      const tiedTraitValue = resolveTrait(tiedPath, {
+        getSelectorCached: false
+      })
+      store.selectors.set(tiedPath, tiedTraitValue)
+      const subject = store.subjects.get(tiedPath)
       if (subject?.hasObservers()) {
-        const tiedTraitValue = resolveTrait(tiedTraitPath)
         subject?.sink.next(tiedTraitValue)
         log(
-          format(MESSAGES.LOGS.SELECTOR_UPDATED, tiedTraitPath, path),
+          format(MESSAGES.LOGS.SELECTOR_UPDATED, tiedPath, path),
           tiedTraitValue
         )
       }
-      updateSelectors(tiedTraitPath)
+      updateSelectors(tiedPath)
     })
   }
 
@@ -336,22 +349,25 @@ function getStoreActions(): StoreActions {
   }
 
   // Returns the value of the simple version of a Trait by path
-  function resolveTrait<T>(path: string, tiedTraitPath?: string): T {
+  function resolveTrait<T>(path: string, options?: ResolveTraitOptions): T {
     const trait = getRawTrait(path)
-    if (typeof tiedTraitPath !== 'undefined') {
+    if (typeof options?.tiedPath !== 'undefined') {
       if (typeof trait === 'undefined') {
         throw new Error(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, path))
       }
-      store.tiedTraits.set(path, getTiedTraits(path).add(tiedTraitPath)) // `tiedTraits` keeps track for each Trait of all the selectors that depend on them
-      store.selectors.add(tiedTraitPath) // `selectors` is a dictionary of all selectors
+      store.tiedTraits.set(path, getTiedTraits(path).add(options?.tiedPath)) // `tiedTraits` keeps track for each Trait of all the selectors that depend on them
+      store.selectors.set(options?.tiedPath, undefined) // `selectors` is a map of all selectors and their values
     }
-    return typeof trait === 'function'
-      ? trait({
-          get(traitPath: string): unknown {
-            return resolveTrait(traitPath)
-          }
-        })
-      : trait
+    if (isSelector(path)) {
+      return options?.getSelectorCached === false
+        ? (trait as Function)({
+            get(traitPath: string): unknown {
+              return resolveTrait(traitPath)
+            }
+          })
+        : (store.selectors.get(path) as T)
+    }
+    return trait as T
   }
 
   // Returns the previous and the current value of a given Trait
@@ -367,7 +383,9 @@ function getStoreActions(): StoreActions {
         ? traitValue({
             value: currentValue,
             get(traitPath: string): unknown {
-              return resolveTrait(traitPath, path)
+              return resolveTrait(traitPath, {
+                tiedPath: path
+              })
             }
           })
         : traitValue
@@ -418,7 +436,7 @@ function getStoreActions(): StoreActions {
         traits: [],
         subjects: new Map(),
         tiedTraits: new Map(),
-        selectors: new Set(),
+        selectors: new Map(),
         storageService: options?.storageService ?? undefined,
         debug: options?.debug ?? false,
         get size(): number {
@@ -449,7 +467,12 @@ function getStoreActions(): StoreActions {
     ) {
       return
     }
-    const valueToStore = store.selectors.has(path) ? traitValue : newValue
+    let valueToStore = newValue
+    if (isSelector(path)) {
+      // Caches the value of the selector
+      store.selectors.set(path, newValue)
+      valueToStore = traitValue
+    }
     if (traitExists(path)) {
       updateTrait(path, currentValue, valueToStore)
     } else {

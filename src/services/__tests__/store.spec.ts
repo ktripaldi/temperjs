@@ -25,15 +25,7 @@ function mockStorageService(options?: {
   }
 }
 
-const randomValues = [
-  'test',
-  1,
-  { key: 1 },
-  [1, 2, 3],
-  false,
-  null,
-  ({ get }: SetterHelpers<number>) => (get('basePath1') as number) * 2
-]
+const randomValues = ['test', 1, { key: 1 }, [1, 2, 3], false, null]
 
 describe('The Store', () => {
   afterEach(() => storeActions.destroy())
@@ -348,6 +340,25 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath3')).toEqual(
       Math.pow(testValue3 * multiplier, 2)
     )
+  })
+
+  it(`should cache the value of a selector and update it only if a dependency changes`, () => {
+    storeActions.create()
+    const selectorCallback = jest.fn()
+    selectorCallback.mockResolvedValue(10)
+    storeActions.setTrait<string>('basePath', 'testValue1')
+    storeActions.setTrait<number>(
+      'selectorPath',
+      ({ get }: SetterHelpers<number>) => selectorCallback(get('basePath'))
+    )
+    selectorCallback.mockClear()
+    // If I ask for a selector value or subscribe to it, I should get the cached value
+    storeActions.getTrait('selectorPath')
+    storeActions.subscribeToTrait('selectorPath', () => {})
+    expect(selectorCallback).toHaveBeenCalledTimes(0)
+    // If any of the selector dependencies changes, the selector should be recomputed
+    storeActions.setTrait<string>('basePath', 'testValue2')
+    expect(selectorCallback).toHaveBeenCalledTimes(1)
   })
 
   it(`should log when a selector is updated, if you have the debug enabled`, () => {
