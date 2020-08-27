@@ -1,7 +1,11 @@
 import MESSAGES from '../config/messages'
 import compare from '../utils/compare'
 import deepMerge from '../utils/deepMerge'
-import createSubject, { Subject, Subscription } from '../utils/rxSubject'
+import createSubject, {
+  Subject,
+  Subscription,
+  SubscriptionOptions
+} from '../utils/rxSubject'
 
 export { Subject, Subscription } from '../utils/rxSubject'
 
@@ -43,7 +47,8 @@ interface StoreActions {
   ): void
   subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: T) => void
+    callback: (traitValue: T) => void,
+    options?: SubscriptionOptions
   ): Subscription | undefined
   destroy(): void
 }
@@ -455,17 +460,25 @@ function getStoreActions(): StoreActions {
   // Subscribes a callback to a Trait
   function subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: T) => void
+    callback: (traitValue: T) => void,
+    options?: SubscriptionOptions
   ): Subscription | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     // `callback` must be a function
     if (typeof callback !== 'function') {
       throw new Error(MESSAGES.ERRORS.SUBSCRIPTION_NO_CALLBACK)
-    } else if (!traitExists(path)) {
-      initializeTrait(path, undefined)
     }
-    return store.subjects.get(path)?.source$.subscribe<T>(callback)
+    let startValue: T | undefined
+    if (!traitExists(path)) {
+      startValue = undefined
+      initializeTrait(path, startValue)
+    } else {
+      startValue = resolveTrait(path)
+    }
+    return store.subjects
+      .get(path)
+      ?.source$.subscribe<T>(options ?? {}, startValue, callback)
   }
 
   // Empties the store

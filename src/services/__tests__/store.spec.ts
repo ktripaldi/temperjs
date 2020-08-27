@@ -1,4 +1,5 @@
 import storeActions, { format, SetterHelpers } from '../store'
+import { Loadable, LoadableState } from '../../utils/rxSubject'
 import MESSAGES from '../../config/messages'
 
 interface MockStorageService {
@@ -194,6 +195,65 @@ describe('The Store', () => {
       ({ value }: SetterHelpers<string>) => value.toUpperCase()
     )
     expect(storeActions.getTrait('testPath')).toEqual(testValue.toUpperCase())
+  })
+
+  it(`should return a Loadable Trait, if you subscribe with the option 'getLoadable' set to true`, () => {
+    storeActions.create()
+    const testPromiseValue = new Promise(resolve => {
+      resolve('testValue')
+    })
+    const callback = jest.fn()
+    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
+      getLoadable: true
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    expect(callback).toHaveBeenCalledTimes(2)
+    expect(callback).toHaveBeenLastCalledWith({
+      state: LoadableState.LOADING,
+      value: testPromiseValue
+    })
+  })
+
+  it(`should return a resolved value, if the Loadable Trait unwraps correctly`, done => {
+    storeActions.create()
+    const testValue = 'testValue'
+    const testPromiseValue = new Promise(resolve => {
+      resolve(testValue)
+    })
+    const callback = jest.fn()
+    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
+      getLoadable: true
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    setTimeout(() => {
+      expect(callback).toHaveBeenCalledTimes(3)
+      expect(callback).toHaveBeenLastCalledWith({
+        state: LoadableState.HAS_VALUE,
+        value: testValue
+      })
+      done()
+    }, 100)
+  })
+
+  it(`should return an error, if the Loadable Trait fails to unwrap`, done => {
+    storeActions.create()
+    const testError = Error('Promise has been rejected')
+    const testPromiseValue = new Promise((_, reject) => {
+      reject(testError)
+    })
+    const callback = jest.fn()
+    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
+      getLoadable: true
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    setTimeout(() => {
+      expect(callback).toHaveBeenCalledTimes(3)
+      expect(callback).toHaveBeenLastCalledWith({
+        state: LoadableState.HAS_ERROR,
+        value: testError
+      })
+      done()
+    }, 100)
   })
 
   it(`should let you set an alternative path separator`, () => {

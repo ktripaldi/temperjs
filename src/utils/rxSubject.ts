@@ -1,6 +1,21 @@
+export enum LoadableState {
+  HAS_VALUE = 'hasValue',
+  HAS_ERROR = 'hasError',
+  LOADING = 'loading'
+}
+
+export interface Loadable<T> {
+  state: LoadableState
+  value: T | Error | Promise<T>
+}
+
+export interface SubscriptionOptions {
+  getLoadable?: boolean
+}
+
 export interface Subject<T> {
   sink: Observer<T>
-  source$: Subscribable<T>
+  source$: Subscribable
   hasObservers(): boolean
 }
 
@@ -10,10 +25,16 @@ export interface Observer<T> {
   complete?(): void
 }
 
-export interface Subscribable<T1> {
-  subscribe(observer: Observer<T1>): Subscription
-  subscribe<T2>(
-    next: (val: T2) => void,
+export interface Subscribable {
+  subscribe<T>(
+    options: SubscriptionOptions,
+    startValue: T | undefined,
+    observer: Observer<T>
+  ): Subscription
+  subscribe<T>(
+    options: SubscriptionOptions,
+    startValue: T | undefined,
+    next: (val: T) => void,
     error?: (error?: any) => void,
     complete?: () => void
   ): Subscription
@@ -25,7 +46,7 @@ export interface Subscription {
 
 export default function createSubject<T>(): Subject<T> {
   let done: { key: 'error' | 'complete'; args: any[] }
-  const observers = [] as Observer<T>[]
+  const resources = [] as [Observer<T>, SubscriptionOptions][]
 
   const sink: Observer<T> = {
     next: emit('next'),
@@ -33,11 +54,11 @@ export default function createSubject<T>(): Subject<T> {
     complete: emit('complete')
   }
 
-  const source$: Subscribable<T> = {
+  const source$: Subscribable = {
     subscribe
   }
 
-  const hasObservers = () => observers.length > 0
+  const hasObservers = () => resources.length > 0
 
   return { sink, source$, hasObservers }
 
@@ -46,19 +67,21 @@ export default function createSubject<T>(): Subject<T> {
       if (done) {
         return
       }
-      for (const observer of observers.slice()) {
-        apply(observer, key, args)
+      for (const resource of resources.slice()) {
+        apply(resource, key, args)
       }
       if (key === 'next') {
         return
       }
-      observers.splice(0, observers.length)
+      resources.splice(0, resources.length)
       done = { key, args }
     }
   }
 
   function subscribe(
     this: void,
+    options: SubscriptionOptions,
+    startValue: T | undefined,
     observerOrNext: Observer<T> | ((val: T) => void),
     error?: (error?: any) => void,
     complete?: () => void
@@ -67,18 +90,19 @@ export default function createSubject<T>(): Subject<T> {
 
     if (done) {
       const { key, args } = done
-      apply(observer, key, args)
+      apply([observer, options], key, args)
       // tslint:disable-next-line:no-empty
       return { unsubscribe() {} }
     }
 
-    observers.push(observer)
+    resources.push([observer, options])
+    apply([observer, options], 'next', [startValue])
     return { unsubscribe }
 
     function unsubscribe(): void {
-      const i = observers.indexOf(observer)
+      const i = resources.findIndex(item => item.includes(observer))
       if (i >= 0) {
-        observers.splice(i, 1)
+        resources.splice(i, 1)
       }
     }
   }
@@ -101,8 +125,38 @@ function toObserver<T>(
     : { next: observerOrNext, error, complete }
 }
 
-function apply<T>(observer: Observer<T>, key: string, args: any[]) {
-  ;((observer as any)[key] as (val?: T) => void)(...args)
+function apply<T>(
+  resource: [Observer<T>, SubscriptionOptions],
+  key: 'next' | 'error' | 'complete',
+  args: any[]
+) {
+  ;(resource[0][key] as (val?: T) => void)(
+    ...args.map(arg => {
+      if (resource[1].getLoadable) {
+        if (typeof arg?.then === 'function') {
+          arg
+            .then((response: T) => {
+              apply(resource, key, [response])
+            })
+            .catch((error: Error) => {
+              apply(resource, key, [error])
+            })
+          return {
+            state: LoadableState.LOADING,
+            value: arg
+          }
+        }
+        return {
+          state:
+            arg instanceof Error
+              ? LoadableState.HAS_ERROR
+              : LoadableState.HAS_VALUE,
+          value: arg
+        }
+      }
+      return arg
+    })
+  )
 }
 
 // tslint:disable-next-line:no-empty
