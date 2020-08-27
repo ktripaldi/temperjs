@@ -225,7 +225,6 @@ describe('The Store', () => {
       getLoadable: true
     })
     storeActions.setTrait('testPath', testPromiseValue)
-    expect(callback).toHaveBeenCalledTimes(2)
     expect(callback).toHaveBeenLastCalledWith({
       state: LoadableState.LOADING,
       value: testPromiseValue
@@ -244,7 +243,6 @@ describe('The Store', () => {
     })
     storeActions.setTrait('testPath', testPromiseValue)
     setTimeout(() => {
-      expect(callback).toHaveBeenCalledTimes(3)
       expect(callback).toHaveBeenLastCalledWith({
         state: LoadableState.HAS_VALUE,
         value: testValue
@@ -265,7 +263,6 @@ describe('The Store', () => {
     })
     storeActions.setTrait('testPath', testPromiseValue)
     setTimeout(() => {
-      expect(callback).toHaveBeenCalledTimes(3)
       expect(callback).toHaveBeenLastCalledWith({
         state: LoadableState.HAS_ERROR,
         value: testError
@@ -303,13 +300,12 @@ describe('The Store', () => {
     )
     // Since `testPath1` is a selector, it is expected to return its value based on the one of `basePath1`
     expect(storeActions.getTrait('testPath1')).toEqual(testValue1 * multiplier)
-    let testState1
-    const callback1 = (value: unknown) => (testState1 = value)
+    const callback1 = jest.fn()
     storeActions.subscribeToTrait<number>('testPath1', callback1)
     // If `basePath1` value changes, `testPath1` is expected to update accordingly
     storeActions.setTrait<typeof testValue2>('basePath1', testValue2)
-    // We can verify this reading the subscribed variable
-    expect(testState1).toEqual(testValue2 * multiplier)
+    // We can verify this checking the last call to the subscribed callback
+    expect(callback1).toHaveBeenLastCalledWith(testValue2 * multiplier)
     // Or retrieving the updated value directly from the store
     expect(storeActions.getTrait('testPath1')).toEqual(testValue2 * multiplier)
 
@@ -321,13 +317,12 @@ describe('The Store', () => {
     )
     // Since `testPath2` is a selector, it is expected to return its value based on the one of `basePath2//basePath`
     expect(storeActions.getTrait('testPath2')).toEqual(testValue1 * multiplier)
-    let testState2
-    const callback2 = (value: unknown) => (testState2 = value)
+    const callback2 = jest.fn()
     storeActions.subscribeToTrait<number>('testPath2', callback2)
     // If `basePath2.basePath3` value changes, `testPath2` is expected to update accordingly
     storeActions.setTrait<typeof testValue2>('basePath2.basePath3', testValue2)
-    // We can verify this reading the subscribed variable
-    expect(testState2).toEqual(testValue2 * multiplier)
+    // We can verify this checking the last call to the subscribed callback
+    expect(callback2).toHaveBeenLastCalledWith(testValue2 * multiplier)
     // Or retrieving the updated value directly from the store
     expect(storeActions.getTrait('testPath2')).toEqual(testValue2 * multiplier)
 
@@ -341,13 +336,14 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath3')).toEqual(
       Math.pow(testValue2 * multiplier, 2)
     )
-    let testState3
-    const callback3 = (value: unknown) => (testState3 = value)
+    const callback3 = jest.fn()
     storeActions.subscribeToTrait<number>('testPath3', callback3)
     // If `basePath2.basePath3` value changes, `testPath2`, hence `testPath3` too, are expected to update accordingly
     storeActions.setTrait<typeof testValue3>('basePath2.basePath3', testValue3)
-    // We can verify this reading the subscribed variable
-    expect(testState3).toEqual(Math.pow(testValue3 * multiplier, 2))
+    // We can verify this checking the last call to the subscribed callback
+    expect(callback3).toHaveBeenLastCalledWith(
+      Math.pow(testValue3 * multiplier, 2)
+    )
     // Or retrieving the updated value directly from the store
     expect(storeActions.getTrait('testPath3')).toEqual(
       Math.pow(testValue3 * multiplier, 2)
@@ -422,31 +418,28 @@ describe('The Store', () => {
     // With an immutable value
     const testValue1 = 'testValue'
     storeActions.setTrait<typeof testValue1>('testPath1', testValue1)
-    let testState1
-    const callback1 = (value: unknown) => (testState1 = value)
+    const callback1 = jest.fn()
     storeActions.subscribeToTrait<typeof testValue1>('testPath1', callback1)
     const testValue2 = 'testValue2'
     storeActions.setTrait<typeof testValue2>('testPath1', testValue2)
-    expect(testState1).toEqual(testValue2)
+    expect(callback1).toHaveBeenLastCalledWith(testValue2)
     // With a mutable value
     const testValue3 = { key1: { key2: 'testValue3' } }
     storeActions.setTrait<typeof testValue3>('testPath2', testValue3)
-    let testState2
-    const callback2 = (value: unknown) => (testState2 = value)
+    const callback2 = jest.fn()
     storeActions.subscribeToTrait<typeof testValue3>('testPath2', callback2)
     const testValue4 = { key1: { key2: 'testValue4' } }
     storeActions.setTrait<typeof testValue4>('testPath2', testValue4)
-    expect(testState2).toEqual(testValue4)
+    expect(callback2).toHaveBeenLastCalledWith(testValue4)
   })
 
   it(`should let you subscribe to a non existing Trait`, () => {
     storeActions.create()
-    let testState
-    const callback = (value: unknown) => (testState = value)
+    const callback = jest.fn()
     storeActions.subscribeToTrait<unknown>('testPath', callback)
     const testValue = 'testValue2'
     storeActions.setTrait<typeof testValue>('testPath', testValue)
-    expect(testState).toEqual(testValue)
+    expect(callback).toHaveBeenLastCalledWith(testValue)
   })
 
   it(`should let you set a storage service`, () => {
