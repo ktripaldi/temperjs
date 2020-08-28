@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.0.5 - 2020-08-28
+- Fix selectors not resetting dependencies on update
+- Cache selector values
+- Add the ability to subscribe a Trait as Loadable
+- Add the ability to create a selector based on another selector
+
 ## 0.0.4 - 2020-08-26
 - Fix hoc `withTemper`
 - Export `Subscription`, `SetterHelpers`, `StorageService` and `StoreOptions` interfaces
