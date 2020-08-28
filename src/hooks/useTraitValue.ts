@@ -11,7 +11,7 @@ import { Loadable, SubscriptionOptions } from '..'
  */
 function useTraitValue<T>(
   path: string,
-  options?: SubscriptionOptions
+  options?: SubscriptionOptions<T>
 ): T | Loadable<T> | undefined {
   const [trait, setTrait] = React.useState<T>()
 

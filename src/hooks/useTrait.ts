@@ -13,7 +13,7 @@ import { Loadable, SubscriptionOptions } from '..'
  */
 function useTrait<T>(
   path: string,
-  options?: SubscriptionOptions
+  options?: SubscriptionOptions<T>
 ): [
   T | Loadable<T> | undefined,
   (traitValue: T | ((helpers: SetterHelpers<T>) => T)) => void
