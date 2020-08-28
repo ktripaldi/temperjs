@@ -109,7 +109,7 @@ function getStoreActions(): StoreActions {
   }
 
   // Retrieves the value of a Trait from an external service storage, if configured
-  function tryImportingFromStorage(path: string): void {
+  function tryImportingFromStorage(path: string): boolean {
     if (store.storageService) {
       const storageKey = getPathRootKey(path)
       if (store.storageService.get) {
@@ -122,10 +122,12 @@ function getStoreActions(): StoreActions {
             createSubjects(storageKey, [store.size], rootTrait)
             store.traits.push(rootTrait)
             log(format(MESSAGES.LOGS.STORAGE_IMPORTED, storageKey), rootTrait)
+            return true
           }
         }
       } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
     }
+    return false
   }
 
   // Saves the value of a Trait to an external service storage, if configured
@@ -149,7 +151,7 @@ function getStoreActions(): StoreActions {
 
   // Check if a Trait exists
   function traitExists(path: string): boolean {
-    return isArray(store.paths.get(path))
+    return isArray(store.paths.get(path)) || tryImportingFromStorage(path)
   }
 
   // Check if a Trait is a selector
@@ -197,18 +199,20 @@ function getStoreActions(): StoreActions {
 
   // Returns the value of a Trait
   function getRawTrait(path: string): unknown {
-    if (!traitExists(path)) tryImportingFromStorage(path)
-    return (
-      store.paths
-        .get(path)
-        ?.reduce(
-          (obj, key) =>
-            isPlainObject(obj) || isArray(obj)
-              ? ((obj as Record<string | number, unknown>)[key] as unknown)
-              : undefined,
-          store.traits as unknown
-        ) ?? undefined
-    )
+    if (traitExists(path)) {
+      return (
+        store.paths
+          .get(path)
+          ?.reduce(
+            (obj, key) =>
+              isPlainObject(obj) || isArray(obj)
+                ? ((obj as Record<string | number, unknown>)[key] as unknown)
+                : undefined,
+            store.traits as unknown
+          ) ?? undefined
+      )
+    }
+    return undefined
   }
 
   // Updates all selectors
