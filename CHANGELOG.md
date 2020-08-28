@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.6 - 2020-08-28
+- Fix Traits not being imported from storage
+- Fix dependent Traits not being retrieved correctly
+
 ## 0.0.5 - 2020-08-28
 - Fix selectors not resetting dependencies on update
 - Cache selector values
