@@ -376,12 +376,12 @@ function getStoreActions(): StoreActions {
   }
 
   // Returns the value of the simple version of a Trait by path
-  function resolveTrait<T>(path: string, options?: ResolveTraitOptions): T {
+  function resolveTrait<T>(
+    path: string,
+    options?: ResolveTraitOptions
+  ): T | undefined {
     const trait = getRawTrait(path)
     if (typeof options?.tiedPath !== 'undefined') {
-      if (typeof trait === 'undefined') {
-        throw new Error(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, path))
-      }
       store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
       const selector = getSelector(options.tiedPath)
       selector.value = resolveTrait(options.tiedPath)

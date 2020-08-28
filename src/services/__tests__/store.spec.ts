@@ -405,16 +405,6 @@ describe('The Store', () => {
     consoleSpy.mockClear()
   })
 
-  it(`should throw an error, if you try to create a selector based on a Trait that doesn't exist`, () => {
-    storeActions.create()
-    expect(() =>
-      storeActions.setTrait<unknown>(
-        'testWrongSelector',
-        ({ get }: SetterHelpers<unknown>) => get('testNoPath')
-      )
-    ).toThrow(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, 'testNoPath'))
-  })
-
   it(`should throw an error, if you try to subscribe to a Trait with with no path`, () => {
     storeActions.create()
     const testValue = 'testValue'

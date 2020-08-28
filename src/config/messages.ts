@@ -21,8 +21,6 @@ const MESSAGES: {
       'Your storage service must implement a method to persist a Trait.',
     STORAGE_MISS_CLEAR:
       'Your storage service must implement a method to remove a Trait.',
-    TRAIT_DOES_NOT_EXIST:
-      "Trait <{0}> doesn't exist and you cannot depend on it",
     TRAIT_WRONG_TYPE:
       'Trait <{0}> has been initialized as <{1}> and cannot receive a <{2}> update',
     SUBSCRIPTION_NO_CALLBACK: 'Trait cannot be subscribed without a callback'
