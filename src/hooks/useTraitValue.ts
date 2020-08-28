@@ -3,12 +3,11 @@ import storeActions from '../services/store'
 import { Loadable, SubscriptionOptions } from '..'
 
 /**
- * `useTraitValue` returns a globally shared unit of state that components can subscribe to
- * The component will rerender when the Trait value changes
+ * `useTraitValue` returns the up-to-date value of the specified Trait
  * @template T
  * @param {string} path - This is the Trait identifier
- * @param {SubscriptionOptions} options - These are the options of your subscription
- * @returns {T | Loadable<T>} Returns the updated value of the Trait
+ * @param {SubscriptionOptions} [options] - These are the options of your subscription
+ * @returns {T | Loadable<T>} This is the up-to-date value of the Trait
  */
 function useTraitValue<T>(
   path: string,

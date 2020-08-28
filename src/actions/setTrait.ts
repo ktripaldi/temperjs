@@ -2,12 +2,10 @@ import storeActions from '../services/store'
 import { SetterHelpers } from '..'
 
 /**
- * `setTrait` creates a globally shared unit of state that components can subscribe to
+ * `setTrait` creates or updates the specified Trait
  * @template T
  * @param {string} path - This is the Trait identifier
- * @param {T} traitValue - This is the Trait value
- *
- * Traits can be anything. When a Trait is an object, each attribute will become a new Trait that is individually subscribable.
+ * @param {T | ((helpers: SetterHelpers<T>) => T)} traitValue - This is the Trait value or the callback to set the value
  */
 function setTrait<T>(
   path: string,

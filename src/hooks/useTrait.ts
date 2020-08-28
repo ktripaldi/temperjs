@@ -3,13 +3,13 @@ import { useTraitValue, setTrait, SetterHelpers } from '..'
 import { Loadable, SubscriptionOptions } from '..'
 
 /**
- * `useTrait` returns an array of two elements:
+ * `useTrait` returns a tuple with:
  * - the result of `useTraitValue`;
  * - a memoized reference to `setTrait`.
  * @template T
  * @param {string} path - This is the Trait identifier
- * @param {SubscriptionOptions} options - These are the options of your subscription
- * @returns {[T, (traitValue: T) => void]} Returns an array of two elements: the result of `useTraitValue` and a memoized reference to `setTrait`
+ * @param {SubscriptionOptions} [options] - These are the options of your subscription
+ * @returns {[T | Loadable<T> | undefined, (traitValue: T) => void]} This is the result of `useTraitValue` and a memoized reference to `setTrait`
  */
 function useTrait<T>(
   path: string,
