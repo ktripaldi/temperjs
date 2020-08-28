@@ -207,14 +207,14 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath')).toEqual(testValue.toUpperCase())
   })
 
-  it(`should return a Loadable Trait, if you subscribe with the option 'getLoadable' set to true`, () => {
+  it(`should return a Loadable Trait, if you subscribe with the option 'loadable' set to true`, () => {
     storeActions.create()
     const testPromiseValue = new Promise(resolve => {
       resolve('testValue')
     })
     const callback = jest.fn()
     storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      getLoadable: true
+      loadable: true
     })
     storeActions.setTrait('testPath', testPromiseValue)
     expect(callback).toHaveBeenLastCalledWith({
@@ -231,7 +231,7 @@ describe('The Store', () => {
     })
     const callback = jest.fn()
     storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      getLoadable: true
+      loadable: true
     })
     storeActions.setTrait('testPath', testPromiseValue)
     setTimeout(() => {
@@ -251,7 +251,7 @@ describe('The Store', () => {
     })
     const callback = jest.fn()
     storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      getLoadable: true
+      loadable: true
     })
     storeActions.setTrait('testPath', testPromiseValue)
     setTimeout(() => {

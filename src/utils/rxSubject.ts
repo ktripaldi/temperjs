@@ -11,7 +11,7 @@ export interface Loadable<T> {
 
 export interface SubscriptionOptions<T> {
   default?: T
-  getLoadable?: boolean
+  loadable?: boolean
 }
 
 export interface Subject<T> {
@@ -133,7 +133,7 @@ function apply<T>(
 ) {
   ;(resource[0][key] as (val?: T) => void)(
     ...args.map(arg => {
-      if (resource[1].getLoadable) {
+      if (resource[1].loadable) {
         if (typeof arg?.then === 'function') {
           arg
             .then((response: T) => {
