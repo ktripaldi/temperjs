@@ -1,10 +1,19 @@
 import * as React from 'react'
 import storeActions, { StoreOptions } from '../services/store'
 
-function withTemper(Component: React.FC, options?: StoreOptions): React.FC {
+/**
+ * `withTemper` wraps your application by creating the Temper store
+ * @template T
+ * @param {React.FunctionComponent<P> | React.ComponentType<P>} Component - This is the Component to wrap, preferably the root of your application
+ * @param {StoreOptions} [options] - These are the options for the store
+ */
+function withTemper<P extends {}>(
+  Component: React.FunctionComponent<P> | React.ComponentType<P>,
+  options?: StoreOptions
+): React.FC {
   storeActions.create(options)
   return function (props) {
-    return <Component {...props} />
+    return <Component {...(props as P)} />
   }
 }
 
