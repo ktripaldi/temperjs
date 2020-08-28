@@ -234,13 +234,8 @@ function getStoreActions(): StoreActions {
   // Returns the list of all Traits that depend on a given Trait
   function getTiedTraits(path: string): Set<string> {
     let tiedTraits: Set<string> = new Set()
-    executeCallbackForEveryChild(
-      path,
-      key =>
-        (tiedTraits = new Set([
-          ...tiedTraits,
-          ...(store.tiedTraits.get(key) ?? new Set())
-        ]))
+    executeCallbackForEveryChild(path, key =>
+      store.tiedTraits.get(key)?.forEach(tiedTraits.add, tiedTraits)
     )
     return tiedTraits
   }
