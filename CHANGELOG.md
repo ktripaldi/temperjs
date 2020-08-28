@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.7 - 2020-08-28
+- Add the ability to subscribe to a Trait specifying a default value
+- Allow creating a selector based on Trait that doesn't exist
+
 ## 0.0.6 - 2020-08-28
 - Fix Traits not being imported from storage
 - Fix dependent Traits not being retrieved correctly
