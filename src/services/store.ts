@@ -29,6 +29,7 @@ export interface StoreOptions {
 interface ResolveTraitOptions {
   getSelectorCached?: boolean
   tiedPath?: string
+  correlationId?: string
 }
 
 interface Store {
@@ -37,7 +38,10 @@ interface Store {
   traits: unknown[]
   subjects: Map<string, Subject<unknown>>
   tiedTraits: Map<string, Set<string>>
-  selectors: Map<string, unknown>
+  selectors: Map<
+    string,
+    { value: unknown; tiedTraits: Set<string>; correlationId: string }
+  >
   storageService: StorageService | undefined
   debug: boolean
   size: number
@@ -84,6 +88,14 @@ export function format(message: string, ...replacements: string[]): string {
 
 function log(logMessage: string, logValue: unknown | string = ''): void {
   if (store.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
+}
+
+function makeCorrelationId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = (Math.random() * 16) | 0,
+      v = c == 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 declare global {
@@ -145,6 +157,22 @@ function getStoreActions(): StoreActions {
     return store.selectors.has(path)
   }
 
+  // Returns the selector value (by setting it, if it doesn't exist)
+  function getSelector(
+    path: string
+  ): { value: unknown; tiedTraits: Set<string>; correlationId: string } {
+    return (
+      store.selectors.get(path) ??
+      store.selectors
+        .set(path, {
+          value: undefined,
+          tiedTraits: new Set(),
+          correlationId: ''
+        })
+        .get(path)!
+    )
+  }
+
   // Returns the index of a root Trait
   function getRootTraitIndex(path: string): number | undefined {
     const index = store.paths.get(getPathRootKey(path))
@@ -190,7 +218,7 @@ function getStoreActions(): StoreActions {
       const tiedTraitValue = resolveTrait(tiedPath, {
         getSelectorCached: false
       })
-      store.selectors.set(tiedPath, tiedTraitValue)
+      getSelector(tiedPath).value = tiedTraitValue
       const subject = store.subjects.get(tiedPath)
       if (subject?.hasObservers()) {
         subject?.sink.next(tiedTraitValue)
@@ -355,8 +383,21 @@ function getStoreActions(): StoreActions {
       if (typeof trait === 'undefined') {
         throw new Error(format(MESSAGES.ERRORS.TRAIT_DOES_NOT_EXIST, path))
       }
-      store.tiedTraits.set(path, getTiedTraits(path).add(options?.tiedPath)) // `tiedTraits` keeps track for each Trait of all the selectors that depend on them
-      store.selectors.set(options?.tiedPath, undefined) // `selectors` is a map of all selectors and their values
+      store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
+      const selector = getSelector(options.tiedPath)
+      selector.value = resolveTrait(options.tiedPath)
+      if (selector.correlationId === options.correlationId)
+        selector.tiedTraits.add(path)
+      else {
+        if (options?.correlationId) {
+          selector.tiedTraits.forEach(item =>
+            store.tiedTraits.get(item)?.delete(options.tiedPath!)
+          )
+          selector.tiedTraits.clear()
+          selector.tiedTraits.add(path)
+          selector.correlationId = options.correlationId
+        }
+      }
     }
     if (isSelector(path)) {
       return options?.getSelectorCached === false
@@ -365,7 +406,7 @@ function getStoreActions(): StoreActions {
               return resolveTrait(traitPath)
             }
           })
-        : (store.selectors.get(path) as T)
+        : (getSelector(path).value as T)
     }
     return trait as T
   }
@@ -384,7 +425,8 @@ function getStoreActions(): StoreActions {
             value: currentValue,
             get(traitPath: string): unknown {
               return resolveTrait(traitPath, {
-                tiedPath: path
+                tiedPath: path,
+                correlationId: makeCorrelationId()
               })
             }
           })
@@ -470,7 +512,7 @@ function getStoreActions(): StoreActions {
     let valueToStore = newValue
     if (isSelector(path)) {
       // Caches the value of the selector
-      store.selectors.set(path, newValue)
+      getSelector(path).value = newValue
       valueToStore = traitValue
     }
     if (traitExists(path)) {

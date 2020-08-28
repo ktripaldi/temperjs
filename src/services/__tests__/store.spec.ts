@@ -361,6 +361,28 @@ describe('The Store', () => {
     expect(selectorCallback).toHaveBeenCalledTimes(1)
   })
 
+  it(`should let you update a selector and the previous dependencies should should no longer have effect`, () => {
+    storeActions.create()
+    const selectorCallback = jest.fn()
+    storeActions.setTrait<string>('basePath1', 'testValue1')
+    storeActions.setTrait<string>('basePath2', 'testValue2')
+    storeActions.setTrait<number>(
+      'selectorPath',
+      ({ get }: SetterHelpers<number>) => selectorCallback(get('basePath1'))
+    )
+    storeActions.setTrait<number>(
+      'selectorPath',
+      ({ get }: SetterHelpers<number>) => selectorCallback(get('basePath2'))
+    )
+    selectorCallback.mockClear()
+    // If you update the old dependency, the selector shouldn't update anymore
+    storeActions.setTrait<string>('basePath1', 'testValue3')
+    expect(selectorCallback).toHaveBeenCalledTimes(0)
+    // On the contrary, if you update the new dependency, the selector should update
+    storeActions.setTrait<string>('basePath2', 'testValue4')
+    expect(selectorCallback).toHaveBeenCalledTimes(1)
+  })
+
   it(`should log when a selector is updated, if you have the debug enabled`, () => {
     const consoleSpy = jest.spyOn(console, 'log')
     storeActions.create({ debug: true })
