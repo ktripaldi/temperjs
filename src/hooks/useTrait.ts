@@ -14,7 +14,10 @@ import { Loadable, SubscriptionOptions } from '..'
 function useTrait<T>(
   path: string,
   options?: SubscriptionOptions
-): [T | Loadable<T> | undefined, (traitValue: T) => void] {
+): [
+  T | Loadable<T> | undefined,
+  (traitValue: T | ((helpers: SetterHelpers<T>) => T)) => void
+] {
   return [
     useTraitValue<T>(path, options),
     React.useCallback(
