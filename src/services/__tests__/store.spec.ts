@@ -528,7 +528,14 @@ describe('The Store', () => {
     const storageService = mockStorageService()
     // @ts-ignore
     storeActions.create({ storageService, debug: true })
+    // The storage service should be called when you ask for a Trait that doesn't exist
     storeActions.getTrait('testPath')
+    expect(consoleSpy).toHaveBeenCalledWith(
+      format(MESSAGES.LOGS.STORAGE_IMPORTED, 'testPath'),
+      testStoredValue
+    )
+    // or when you subscribe to a Trait that doesn't exist
+    storeActions.subscribeToTrait('testPath', () => {})
     expect(consoleSpy).toHaveBeenCalledWith(
       format(MESSAGES.LOGS.STORAGE_IMPORTED, 'testPath'),
       testStoredValue
