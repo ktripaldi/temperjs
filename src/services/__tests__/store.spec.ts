@@ -456,6 +456,16 @@ describe('The Store', () => {
     expect(callback2).toHaveBeenLastCalledWith(testValue4)
   })
 
+  it(`should let you subscribe to a Trait specifying a default value`, () => {
+    storeActions.create()
+    const testValue = 'testValue'
+    const callback = jest.fn()
+    storeActions.subscribeToTrait<typeof testValue>('testPath', callback, {
+      default: testValue
+    })
+    expect(callback).toHaveBeenLastCalledWith(testValue)
+  })
+
   it(`should let you subscribe to a non existing Trait`, () => {
     storeActions.create()
     const callback = jest.fn()

@@ -57,7 +57,7 @@ interface StoreActions {
   subscribeToTrait<T>(
     path: string,
     callback: (traitValue: T) => void,
-    options?: SubscriptionOptions
+    options?: SubscriptionOptions<T>
   ): Subscription | undefined
   destroy(): void
 }
@@ -525,7 +525,7 @@ function getStoreActions(): StoreActions {
   function subscribeToTrait<T>(
     path: string,
     callback: (traitValue: T) => void,
-    options?: SubscriptionOptions
+    options?: SubscriptionOptions<T>
   ): Subscription | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)

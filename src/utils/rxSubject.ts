@@ -9,7 +9,8 @@ export interface Loadable<T> {
   value: T | Error | Promise<T>
 }
 
-export interface SubscriptionOptions {
+export interface SubscriptionOptions<T> {
+  default?: T
   getLoadable?: boolean
 }
 
@@ -27,12 +28,12 @@ export interface Observer<T> {
 
 export interface Subscribable {
   subscribe<T>(
-    options: SubscriptionOptions,
+    options: SubscriptionOptions<T>,
     startValue: T | undefined,
     observer: Observer<T>
   ): Subscription
   subscribe<T>(
-    options: SubscriptionOptions,
+    options: SubscriptionOptions<T>,
     startValue: T | undefined,
     next: (val: T) => void,
     error?: (error?: any) => void,
@@ -46,7 +47,7 @@ export interface Subscription {
 
 export default function createSubject<T>(): Subject<T> {
   let done: { key: 'error' | 'complete'; args: any[] }
-  const resources = [] as [Observer<T>, SubscriptionOptions][]
+  const resources = [] as [Observer<T>, SubscriptionOptions<T>][]
 
   const sink: Observer<T> = {
     next: emit('next'),
@@ -80,7 +81,7 @@ export default function createSubject<T>(): Subject<T> {
 
   function subscribe(
     this: void,
-    options: SubscriptionOptions,
+    options: SubscriptionOptions<T>,
     startValue: T | undefined,
     observerOrNext: Observer<T> | ((val: T) => void),
     error?: (error?: any) => void,
@@ -126,7 +127,7 @@ function toObserver<T>(
 }
 
 function apply<T>(
-  resource: [Observer<T>, SubscriptionOptions],
+  resource: [Observer<T>, SubscriptionOptions<T>],
   key: 'next' | 'error' | 'complete',
   args: any[]
 ) {
@@ -154,7 +155,7 @@ function apply<T>(
           value: arg
         }
       }
-      return arg
+      return arg ?? resource[1].default
     })
   )
 }
