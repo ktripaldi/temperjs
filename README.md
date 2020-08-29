@@ -2,10 +2,10 @@
 
 ![alt text](Temper.png "Temper" )
 
-## Getting Star
+## Getting Started
 
 This section is meant to get you familiar with the Temper way of doing things.
-If you're looking for something specific, please read the [API Documentation](API Documentation). If you're just starting out with Temper, read on!
+If you're looking for something specific, please read the API Documentation. If you're just starting out with Temper, read on!
 
 For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you reach the value of 5.
 
