@@ -1,66 +1,16 @@
 import MESSAGES from '../config/messages'
 import compare from '../utils/compare'
 import deepMerge from '../utils/deepMerge'
-import createSubject, {
-  Subject,
+import createSubject from '../utils/rxSubject'
+import {
+  Trait,
+  TraitSetterValue,
   Subscription,
-  SubscriptionOptions
-} from '../utils/rxSubject'
-
-export { Subject, Subscription } from '../utils/rxSubject'
-
-export interface SetterHelpers<T> {
-  value: T
-  get(path: string): unknown
-}
-
-export interface StorageService {
-  set: (key: string, value: unknown) => void
-  get: (key: string) => unknown
-  clear: (key: string) => unknown
-}
-
-export interface StoreOptions {
-  pathSeparator?: string
-  storageService?: StorageService
-  debug?: boolean
-}
-
-interface ResolveTraitOptions {
-  getSelectorCached?: boolean
-  tiedPath?: string
-  correlationId?: string
-}
-
-interface Store {
-  paths: Map<string, (string | number)[]>
-  pathSeparator: string
-  traits: unknown[]
-  subjects: Map<string, Subject<unknown>>
-  tiedTraits: Map<string, Set<string>>
-  selectors: Map<
-    string,
-    { value: unknown; tiedTraits: Set<string>; correlationId: string }
-  >
-  storageService: StorageService | undefined
-  debug: boolean
-  size: number
-}
-
-interface StoreActions {
-  create(options?: StoreOptions): void
-  getTrait<T>(path: string): T | undefined
-  setTrait<T>(
-    path: string,
-    traitValue: T | ((helpers: SetterHelpers<T>) => T)
-  ): void
-  subscribeToTrait<T>(
-    path: string,
-    callback: (traitValue: T) => void,
-    options?: SubscriptionOptions<T>
-  ): Subscription | undefined
-  destroy(): void
-}
+  StoreOptions,
+  ResolveTraitOptions,
+  Store,
+  StoreActions
+} from '../config/interfaces'
 
 export function isArray(element: unknown): boolean {
   return typeof element !== 'undefined' && Array.isArray(element)
@@ -487,17 +437,14 @@ function getStoreActions(): StoreActions {
   }
 
   // Returns the value of a Trait
-  function getTrait<T>(path: string): T | undefined {
+  function getTrait<T>(path: string): Trait<T> | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     return resolveTrait<T>(path)
   }
 
   // Sets the value of a Trait
-  function setTrait<T>(
-    path: string,
-    traitValue: T | ((helpers: SetterHelpers<T>) => T)
-  ): void {
+  function setTrait<T>(path: string, traitValue: TraitSetterValue<T>): void {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
     const [currentValue, newValue] = processTraitValue(path, traitValue)
@@ -524,8 +471,7 @@ function getStoreActions(): StoreActions {
   // Subscribes a callback to a Trait
   function subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: T) => void,
-    options?: SubscriptionOptions<T>
+    callback: (traitValue: Trait<T>) => void
   ): Subscription | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)

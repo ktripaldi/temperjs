@@ -1,49 +1,9 @@
-export enum LoadableState {
-  HAS_VALUE = 'hasValue',
-  HAS_ERROR = 'hasError',
-  LOADING = 'loading'
-}
-
-export interface Loadable<T> {
-  state: LoadableState
-  value: T | Error | Promise<T>
-}
-
-export interface SubscriptionOptions<T> {
-  default?: T
-  loadable?: boolean
-}
-
-export interface Subject<T> {
-  sink: Observer<T>
-  source$: Subscribable
-  hasObservers(): boolean
-}
-
-export interface Observer<T> {
-  next(val: T): void
-  error?(error?: any): void
-  complete?(): void
-}
-
-export interface Subscribable {
-  subscribe<T>(
-    options: SubscriptionOptions<T>,
-    startValue: T | undefined,
-    observer: Observer<T>
-  ): Subscription
-  subscribe<T>(
-    options: SubscriptionOptions<T>,
-    startValue: T | undefined,
-    next: (val: T) => void,
-    error?: (error?: any) => void,
-    complete?: () => void
-  ): Subscription
-}
-
-export interface Subscription {
-  unsubscribe(): void
-}
+import {
+  Subject,
+  Observer,
+  Subscribable,
+  Subscription
+} from '../config/interfaces'
 
 export default function createSubject<T>(): Subject<T> {
   let done: { key: 'error' | 'complete'; args: any[] }

@@ -1,5 +1,6 @@
 import * as React from 'react'
-import storeActions, { StoreOptions } from '../services/store'
+import storeActions from '../services/store'
+import { StoreOptions } from '..'
 
 /**
  * `withTemper` wraps your application by creating the Temper store
