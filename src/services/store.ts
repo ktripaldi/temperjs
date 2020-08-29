@@ -27,7 +27,7 @@ export function isPlainObject(element: unknown): boolean {
 
 export function format(message: string, ...replacements: string[]): string {
   let formattedString: string = message
-  for (var replacement in replacements) {
+  for (let replacement in replacements) {
     formattedString = formattedString.replace(
       new RegExp('\\{' + replacement + '\\}', 'g'),
       replacements[replacement]
@@ -486,7 +486,10 @@ function getStoreActions(): StoreActions {
 
   // Empties the store
   function destroy(): void {
-    if (global.store) delete global.store
+    if (global.store) {
+      // @ts-ignore
+      delete global.store
+    }
   }
 
   return {

@@ -202,7 +202,7 @@ describe('The Store', () => {
     storeActions.setTrait<typeof testValue>('testPath', testValue)
     storeActions.setTrait<string>(
       'testPath',
-      ({ value }: SetterHelpers<string>) => value.toUpperCase()
+      ({ value }: SetterHelpers<string>) => (value as string).toUpperCase()
     )
     expect(storeActions.getTrait('testPath')).toEqual(testValue.toUpperCase())
   })
@@ -463,6 +463,7 @@ describe('The Store', () => {
     storeActions.subscribeToTrait<typeof testValue>('testPath', callback, {
       default: testValue
     })
+    storeActions.setTrait('testPath', undefined)
     expect(callback).toHaveBeenLastCalledWith(testValue)
   })
 
