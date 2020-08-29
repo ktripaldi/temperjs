@@ -471,7 +471,8 @@ function getStoreActions(): StoreActions {
   // Subscribes a callback to a Trait
   function subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: Trait<T>) => void
+    callback: (traitValue: Trait<T>) => void,
+    defaultValue?: Trait<T>
   ): Subscription | undefined {
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     checkPath(path)
@@ -479,16 +480,8 @@ function getStoreActions(): StoreActions {
     if (typeof callback !== 'function') {
       throw new Error(MESSAGES.ERRORS.SUBSCRIPTION_NO_CALLBACK)
     }
-    let startValue: T | undefined
-    if (!traitExists(path)) {
-      startValue = undefined
-      initializeTrait(path, startValue)
-    } else {
-      startValue = resolveTrait(path)
-    }
-    return store.subjects
-      .get(path)
-      ?.source$.subscribe<T>(options ?? {}, startValue, callback)
+    if (!traitExists(path)) initializeTrait(path, defaultValue)
+    return store.subjects.get(path)?.source$.subscribe<T>(callback)
   }
 
   // Empties the store

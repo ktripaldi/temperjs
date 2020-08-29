@@ -7,7 +7,7 @@ import {
 
 export default function createSubject<T>(): Subject<T> {
   let done: { key: 'error' | 'complete'; args: any[] }
-  const resources = [] as [Observer<T>, SubscriptionOptions<T>][]
+  const observers = [] as Observer<T>[]
 
   const sink: Observer<T> = {
     next: emit('next'),
@@ -19,7 +19,7 @@ export default function createSubject<T>(): Subject<T> {
     subscribe
   }
 
-  const hasObservers = () => resources.length > 0
+  const hasObservers = () => observers.length > 0
 
   return { sink, source$, hasObservers }
 
@@ -28,21 +28,19 @@ export default function createSubject<T>(): Subject<T> {
       if (done) {
         return
       }
-      for (const resource of resources.slice()) {
-        apply(resource, key, args)
+      for (const observer of observers.slice()) {
+        apply(observer, key, args)
       }
       if (key === 'next') {
         return
       }
-      resources.splice(0, resources.length)
+      observers.splice(0, observers.length)
       done = { key, args }
     }
   }
 
   function subscribe(
     this: void,
-    options: SubscriptionOptions<T>,
-    startValue: T | undefined,
     observerOrNext: Observer<T> | ((val: T) => void),
     error?: (error?: any) => void,
     complete?: () => void
@@ -51,19 +49,18 @@ export default function createSubject<T>(): Subject<T> {
 
     if (done) {
       const { key, args } = done
-      apply([observer, options], key, args)
+      apply(observer, key, args)
       // tslint:disable-next-line:no-empty
       return { unsubscribe() {} }
     }
 
-    resources.push([observer, options])
-    apply([observer, options], 'next', [startValue])
+    observers.push(observer)
     return { unsubscribe }
 
     function unsubscribe(): void {
-      const i = resources.findIndex(item => item.includes(observer))
+      const i = observers.indexOf(observer)
       if (i >= 0) {
-        resources.splice(i, 1)
+        observers.splice(i, 1)
       }
     }
   }
@@ -86,38 +83,8 @@ function toObserver<T>(
     : { next: observerOrNext, error, complete }
 }
 
-function apply<T>(
-  resource: [Observer<T>, SubscriptionOptions<T>],
-  key: 'next' | 'error' | 'complete',
-  args: any[]
-) {
-  ;(resource[0][key] as (val?: T) => void)(
-    ...args.map(arg => {
-      if (resource[1].loadable) {
-        if (typeof arg?.then === 'function') {
-          arg
-            .then((response: T) => {
-              apply(resource, key, [response])
-            })
-            .catch((error: Error) => {
-              apply(resource, key, [error])
-            })
-          return {
-            state: LoadableState.LOADING,
-            value: arg
-          }
-        }
-        return {
-          state:
-            arg instanceof Error
-              ? LoadableState.HAS_ERROR
-              : LoadableState.HAS_VALUE,
-          value: arg
-        }
-      }
-      return arg ?? resource[1].default
-    })
-  )
+function apply<T>(observer: Observer<T>, key: string, args: any[]) {
+  ;((observer as any)[key] as (val?: T) => void)(...args)
 }
 
 // tslint:disable-next-line:no-empty

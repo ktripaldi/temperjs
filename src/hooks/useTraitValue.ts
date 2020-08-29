@@ -13,20 +13,41 @@ function useTraitValue<T>(
   path: string,
   options?: SubscriptionOptions<T>
 ): SubscribedTrait<T> {
-  const [trait, setTrait] = React.useState<T>()
+  const [trait, setTrait] = React.useState<SubscribedTrait<T>>(
+    storeActions.getTrait<T>(path) ?? options?.default
+  )
 
   React.useEffect(() => {
     const subscription = storeActions.subscribeToTrait<T>(
       path,
       setTrait,
-      options
+      options?.default
     )
     return () => {
       subscription?.unsubscribe()
     }
   }, [])
 
-  return trait
+  if (options?.loadable && typeof (trait as Promise<T>)?.then === 'function') {
+    ;(trait as Promise<T>)
+      .then(resolve => {
+        setTrait({
+          state: LoadableState.HAS_VALUE,
+          value: resolve
+        })
+      })
+      .catch(error => {
+        setTrait({
+          state: LoadableState.HAS_ERROR,
+          value: error
+        })
+      })
+    return {
+      state: LoadableState.LOADING,
+      value: trait as Promise<T>
+    }
+  }
+  return trait as T
 }
 
 export default useTraitValue
