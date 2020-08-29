@@ -1,6 +1,9 @@
 # Change Log
 
-## 0.0.8 - 2020-08-29
+## 0.1.1 - 2020-08-29
+- Fix readme errors
+
+## 0.1.0 - 2020-08-29
 - Fix default value being ignored
 - Fix dependent Traits being resetted on selector update
 
