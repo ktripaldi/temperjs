@@ -332,7 +332,6 @@ function getStoreActions(): StoreActions {
   ): T | undefined {
     const trait = getRawTrait(path)
     if (typeof options?.tiedPath !== 'undefined') {
-      store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
       const selector = getSelector(options.tiedPath)
       selector.value = resolveTrait(options.tiedPath)
       if (selector.correlationId === options.correlationId)
@@ -347,6 +346,7 @@ function getStoreActions(): StoreActions {
           selector.correlationId = options.correlationId
         }
       }
+      store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
     }
     if (isSelector(path)) {
       return options?.getSelectorCached === false
