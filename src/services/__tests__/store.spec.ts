@@ -1,5 +1,5 @@
 import storeActions, { format } from '../store'
-import { Loadable, LoadableState, SetterHelpers } from '../..'
+import { SetterHelpers } from '../..'
 import MESSAGES from '../../config/messages'
 
 interface MockStorageService {
@@ -207,62 +207,6 @@ describe('The Store', () => {
     expect(storeActions.getTrait('testPath')).toEqual(testValue.toUpperCase())
   })
 
-  it(`should return a Loadable Trait, if you subscribe with the option 'loadable' set to true`, () => {
-    storeActions.create()
-    const testPromiseValue = new Promise(resolve => {
-      resolve('testValue')
-    })
-    const callback = jest.fn()
-    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      loadable: true
-    })
-    storeActions.setTrait('testPath', testPromiseValue)
-    expect(callback).toHaveBeenLastCalledWith({
-      state: LoadableState.LOADING,
-      value: testPromiseValue
-    })
-  })
-
-  it(`should return a resolved value, if the Loadable Trait unwraps correctly`, done => {
-    storeActions.create()
-    const testValue = 'testValue'
-    const testPromiseValue = new Promise(resolve => {
-      resolve(testValue)
-    })
-    const callback = jest.fn()
-    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      loadable: true
-    })
-    storeActions.setTrait('testPath', testPromiseValue)
-    setTimeout(() => {
-      expect(callback).toHaveBeenLastCalledWith({
-        state: LoadableState.HAS_VALUE,
-        value: testValue
-      })
-      done()
-    }, 100)
-  })
-
-  it(`should return an error, if the Loadable Trait fails to unwrap`, done => {
-    storeActions.create()
-    const testError = Error('Promise has been rejected')
-    const testPromiseValue = new Promise((_, reject) => {
-      reject(testError)
-    })
-    const callback = jest.fn()
-    storeActions.subscribeToTrait<Loadable<string>>('testPath', callback, {
-      loadable: true
-    })
-    storeActions.setTrait('testPath', testPromiseValue)
-    setTimeout(() => {
-      expect(callback).toHaveBeenLastCalledWith({
-        state: LoadableState.HAS_ERROR,
-        value: testError
-      })
-      done()
-    }, 100)
-  })
-
   it(`should let you set an alternative path separator`, () => {
     storeActions.create({ pathSeparator: '>' })
     const testValue = 'testValue'
@@ -454,17 +398,6 @@ describe('The Store', () => {
     const testValue4 = { key1: { key2: 'testValue4' } }
     storeActions.setTrait<typeof testValue4>('testPath2', testValue4)
     expect(callback2).toHaveBeenLastCalledWith(testValue4)
-  })
-
-  it(`should let you subscribe to a Trait specifying a default value`, () => {
-    storeActions.create()
-    const testValue = 'testValue'
-    const callback = jest.fn()
-    storeActions.subscribeToTrait<typeof testValue>('testPath', callback, {
-      default: testValue
-    })
-    storeActions.setTrait('testPath', undefined)
-    expect(callback).toHaveBeenLastCalledWith(testValue)
   })
 
   it(`should let you subscribe to a non existing Trait`, () => {

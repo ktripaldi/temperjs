@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks'
-import storeActions, { SetterHelpers } from '../../services/store' // We will call `storeActions` methods directly to check the results of `useTraitsValue`
+import storeActions from '../../services/store' // We will call `storeActions` methods directly to check the results of `useTraitsValue`
+import { LoadableState, SetterHelpers } from '../..'
 import useTraitValue from '../useTraitValue'
 
 // Sets some random Trait values
@@ -53,5 +54,80 @@ describe('The hook `useTraitValue`', () => {
       storeActions.setTrait('testPath1', testValue2)
     })
     expect(result.current).toEqual(testValue2.toUpperCase())
+  })
+
+  it(`should let you subscribe to a Trait specifying a default value`, () => {
+    storeActions.create()
+    const testDefaultValue = 'testValue'
+    // If the Trait is undefined, we should get the default value
+    const { result: result1 } = renderHook(() =>
+      useTraitValue('testPath1', { default: testDefaultValue })
+    )
+    expect(result1.current).toEqual(testDefaultValue)
+    // In the case we also want the default value to be become the actual value of the Trait
+    expect(storeActions.getTrait('testPath1')).toEqual(testDefaultValue)
+
+    // If the Trait already exists and has a value, we should get the actual value
+    const testValue = 'testValue'
+    storeActions.setTrait('testPath2', testValue)
+    const { result: result2 } = renderHook(() =>
+      useTraitValue('testPath2', { default: testDefaultValue })
+    )
+    expect(result2.current).toEqual(testValue)
+    // In the case we don't want the actual value of the Trait to change
+    expect(storeActions.getTrait('testPath2')).toEqual(testValue)
+  })
+
+  it(`should return a Loadable Trait, if you subscribe with the option 'loadable' set to true`, () => {
+    storeActions.create()
+    const testPromiseValue = new Promise(resolve => {
+      resolve('testValue')
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    const { result } = renderHook(() =>
+      useTraitValue('testPath', { loadable: true })
+    )
+    expect(result.current).toEqual({
+      state: LoadableState.LOADING,
+      value: testPromiseValue
+    })
+  })
+
+  it(`should return a resolved value, if the Loadable Trait unwraps correctly`, done => {
+    storeActions.create()
+    const testValue = 'testValue'
+    const testPromiseValue = new Promise(resolve => {
+      resolve(testValue)
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    const { result } = renderHook(() =>
+      useTraitValue('testPath', { loadable: true })
+    )
+    setTimeout(() => {
+      expect(result.current).toEqual({
+        state: LoadableState.HAS_VALUE,
+        value: testValue
+      })
+      done()
+    }, 100)
+  })
+
+  it(`should return an error, if the Loadable Trait fails to unwrap`, done => {
+    storeActions.create()
+    const testError = Error('Promise has been rejected')
+    const testPromiseValue = new Promise((_, reject) => {
+      reject(testError)
+    })
+    storeActions.setTrait('testPath', testPromiseValue)
+    const { result } = renderHook(() =>
+      useTraitValue('testPath', { loadable: true })
+    )
+    setTimeout(() => {
+      expect(result.current).toEqual({
+        state: LoadableState.HAS_ERROR,
+        value: testError
+      })
+      done()
+    }, 100)
   })
 })
