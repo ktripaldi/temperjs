@@ -1,15 +1,15 @@
-# Temper &middot; ![](https://img.shields.io/npm/v/temperjs) ![](https://img.shields.io/github/issues/ktripaldi/temperjs) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+#Temper &middot; ![](https://img.shields.io/npm/v/temperjs) ![](https://img.shields.io/github/issues/ktripaldi/temperjs) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ![alt text](Temper.png "Temper" )
 
-## Getting Star
+##Getting Started
 
 This section is meant to get you familiar with the Temper way of doing things.
-If you're looking for something specific, please read the [API Documentation](API Documentation). If you're just starting out with Temper, read on!
+If you're looking for something specific, please read the [API Documentation](#api-documentation). If you're just starting out with Temper, read on!
 
 For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you reach the value of 5.
 
-### Create React App
+###Create React App
 Temper is a state management library for React, so you need to have React installed and running to use Temper. The easiest and recommended way for bootstrapping a React application is to use [Create React App](https://github.com/facebook/create-react-app#creating-an-app):
 
 ```shell
@@ -20,7 +20,7 @@ npx create-react-app my-app
 
 For more ways to install Create React App, see the [official documentation](https://github.com/facebook/create-react-app#creating-an-app).
 
-### Installation
+###Installation
 
 Using [npm](https://www.npmjs.com/get-npm):
 ```shell
@@ -33,7 +33,7 @@ Using [yarn](https://classic.yarnpkg.com/en/docs/install/):
 yarn add temperjs
 ```
 
-### withTemper
+###withTemper
 
 Components that use Temper states need some parent (preferably the root component) to be wrapped with the hoc `withTemper`.
 
@@ -51,7 +51,7 @@ export default withTemper(App);
 
 We'll implement the `Counter` component in the following section.
 
-### Traits
+###Traits
 
 Temper's states are called **Traits**.
 Traits are globally shared units of state that components can subscribe to.
@@ -103,7 +103,7 @@ export default Counter;
 
 ```
 
-### Selectors
+###Selectors
 
 **A selector is a derived state**. You can think of selectors as the output of passing a state to a pure function that execute some logic based on that state.
 
@@ -126,7 +126,7 @@ function App() {
 export default withTemper(App);
 ```
 
-### Nested Traits
+###Nested Traits
 
 Temper encourages you to wrap related Traits in a single object.
 **When a Trait is an object, each attribute will become a new Trait that is individually updatable and subscribable**:
@@ -180,13 +180,13 @@ export default Counter;
 
 ```
 
-### Wrapping things up
+###Wrapping things up
 
 Run the Counter on [Sandbox](https://codesandbox.io/s/temperjs-getting-started-o9l56?file=/src/App.js):
 
-## API Documentation
+##API Documentation
 
-### withTemper
+###withTemper
 
 To be able to use Traits, you need to wrap your root component using the `withTemper()` hoc.
 
@@ -237,7 +237,7 @@ interface StorageService {
 
 `debug`, if set to `true`, will log useful information on the browser console.
 
-### setTrait
+###setTrait
 
 `setTrait` creates or updates a Trait.
 
@@ -266,7 +266,7 @@ A selector represents a piece of derived state and lets you build dynamic data t
 setTrait('circleArea', ({ get }) => Math.pow(get('radius'), 2) * Math.PI);
 ```
 
-### useTraitValue
+###useTraitValue
 
 `useTraitValue` returns the current value of a Trait.
 The component will rerender when the Trait value changes.
@@ -298,7 +298,7 @@ const count = useTraitValue('asyncCount', { loadable: true });
 
 `loadable` tells the hook that you want to receive a Loadable instance of the Trait.
 
-### useTrait
+###useTrait
 
 `useTrait` returns an array of two elements:
 - the result of `useTraitValue`;
@@ -320,7 +320,7 @@ function increaseCount() {
 
 `useTrait` accepts the same subscription configuration options of `useTraitValue`.
 
-### getTrait
+###getTrait
 
 `getTrait` returns the value of a Trait at the time it's called, so you can read its value without subscribing.
 
@@ -334,6 +334,6 @@ const getTrait = require('temperjs').getTrait
 const height = getTrait('height');
 ```
 
-### Licence
+###Licence
 
 [MIT](LICENSE)
