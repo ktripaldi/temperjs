@@ -2,7 +2,25 @@
 
 ![alt text](Temper.png "Temper" )
 
-## Installation
+## Getting Star
+
+This section is meant to get you familiar with the Temper way of doing things.
+If you're looking for something specific, please read the [API Documentation](API Documentation). If you're just starting out with Temper, read on!
+
+For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you reach the value of 5.
+
+### Create React App
+Temper is a state management library for React, so you need to have React installed and running to use Temper. The easiest and recommended way for bootstrapping a React application is to use [Create React App](https://github.com/facebook/create-react-app#creating-an-app):
+
+```shell
+npx create-react-app my-app
+```
+
+> [npx](https://medium.com/@maybekatz/introducing-npx-an-npm-package-runner-55f7d4bd282b) is a package runner tool that comes with npm 5.2+ and higher, see [instructions for older npm versions](https://gist.github.com/gaearon/4064d3c23a77c74a3614c498a8bb1c5f).
+
+For more ways to install Create React App, see the [official documentation](https://github.com/facebook/create-react-app#creating-an-app).
+
+### Installation
 
 Using [npm](https://www.npmjs.com/get-npm):
 ```shell
@@ -15,51 +33,160 @@ Using [yarn](https://classic.yarnpkg.com/en/docs/install/):
 yarn add temperjs
 ```
 
-## Introduction
+### withTemper
 
-Temper is a state management library for React.
+Components that use Temper states need some parent (preferably the root component) to be wrapped with the hoc `withTemper`.
 
-Temper's states are called Traits.
+```jsx
+// using ES6 modules
+import React from 'react';
+import { withTemper } from 'temperjs';
+
+function App() {
+  return <Counter />
+}
+
+export default withTemper(App);
+```
+
+We'll implement the `Counter` component in the following section.
+
+### Traits
+
+Temper's states are called **Traits**.
 Traits are globally shared units of state that components can subscribe to.
-Traits can be read and written from any component.
+**Traits can be read and written from any component.**
 Subscribed components will rerender everytime the Trait value changes.
 
-Traits can be anything. When a Trait is an object, each attribute will become a new Trait that is individually updatable and subscribable.
-**Traits are type safe**. Once set, a Trait type cannot change.
+If you want to set a Trait, use can use the action `setTrait`:
 
-A few examples (more on the usage below):
+```jsx
+// using ES6 modules
+import React from 'react';
+import { withTemper } from 'temperjs';
 
-```js
-setTrait('fontSize', 14);
-```
-will create a single trait:
-- fontSize: `14`
+function App() {
+  setTrait('count', 0);
+  return <Counter />
+}
 
-```js
-setTrait('font', { size: 14, isBold: true });
-```
-will create a 3 traits:
-- font: `{ size: 14, isBold: true }`
-- font.size: `14`
-- font.isBold: `true`
-
-These traits will be independently accessible:
-```js
-const font = getTrait('font');
-const [size, setSize] = useTrait('font.size');
-const isBold = useTraitValue('font.isBold');
+export default withTemper(App);
 ```
 
-Similarly:
-```js
-setTrait('font.isBold', true);
+If you need to read from **and write to** a Trait, you can use the hook `useTrait()`:
+
+```jsx
+// using ES6 modules
+import React from 'react';
+import { useTrait } from 'temperjs';
+
+function Counter() {
+  const [count, setCount] = useTrait('count');
+
+  function incrementCounter() {
+    setCount(({ value }) => value + 1);
+  }
+  function decrementCounter() {
+    setCount(({ value }) => value - 1);
+  }
+
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={incrementCounter}>Increment</button>
+      <button onClick={decrementCounter}>Decrement</button>
+    </div>
+  );
+}
+
+export default Counter;
+
 ```
 
-will create a 2 traits:
-- font: `{ isBold: true }`
-- font.isBold: `true`
+### Selectors
 
-## Usage
+**A selector is a derived state**. You can think of selectors as the output of passing a state to a pure function that execute some logic based on that state.
+
+In Temper selectors are regular Traits:
+
+```jsx
+// using ES6 modules
+import React from 'react';
+import { withTemper, setTrait } from 'temperjs';
+
+function App() {
+  // This is a regular Trait
+  setTrait('count', 0);
+  // This is a selector Trait
+  setTrait('isTargetReached', ({ get }) => get('count') > 5);
+
+  return <Counter />
+}
+
+export default withTemper(App);
+```
+
+### Nested Traits
+
+Temper encourages you to wrap related Traits in a single object.
+**When a Trait is an object, each attribute will become a new Trait that is individually updatable and subscribable**:
+
+```jsx
+// using ES6 modules
+import React from 'react';
+import { withTemper, setTrait } from 'temperjs';
+
+function App() {
+  setTrait('counter', {
+    count: 0,
+    isTargetReached: ({ get }) => get('count') > 5
+  });
+
+  return <Counter />
+}
+
+export default withTemper(App);
+```
+
+You'll be able to reference nested Traits with the dot notation.
+If you just need to read a Trait, you can use the hook `useTraitValue()`:
+
+```jsx
+// using ES6 modules
+import React from 'react';
+import { useTrait } from 'temperjs';
+
+function Counter() {
+  const [count, setCount] = useTrait('counter.count');
+  const isTargetReached = useTraitValue('counter.isTargetReached');
+
+  function incrementCounter() {
+    setCount(({ value }) => value + 1);
+  }
+  function decrementCounter() {
+    setCount(({ value }) => value - 1);
+  }
+
+  return (
+    <div>
+      <p>{count} { isTargetReached && (<span>You've reached the target!</span>)}</p>
+      <button onClick={incrementCounter}>Increment</button>
+      <button onClick={decrementCounter}>Decrement</button>
+    </div>
+  );
+}
+
+export default Counter;
+
+```
+
+### Wrapping things up
+
+Run the Counter on [Sandbox](https://codesandbox.io/s/temperjs-getting-started-o9l56?file=/src/App.js):
+
+## API Documentation
+
+### withTemper
 
 To be able to use Traits, you need to wrap your root component using the `withTemper()` hoc.
 
@@ -129,7 +256,7 @@ setTrait('titles.mainTitle', 'Lorem ipsum dolor sit amet');
 setTrait('title.subTitle', ({ value }) => value.toLowerCase());
 ```
 
-**Traits are type safe**. Once set, a Trait type cannot change.
+Traits are type safe. Once set, a Trait type cannot change.
 You can however unset a Trait by passing an `undefined` value.
 
 **Trait can also be selectors.**
@@ -154,6 +281,23 @@ const useTraitValue = require('temperjs').useTraitValue
 const count = useTraitValue('count');
 ```
 
+You can also pass a subscription configuration:
+
+```js
+// using ES6 modules
+import { useTraitValue } from 'temperjs'
+
+// using CommonJS modules
+const useTraitValue = require('temperjs').useTraitValue
+
+const count = useTraitValue('count', { default: 0 });
+const count = useTraitValue('asyncCount', { loadable: true });
+```
+
+`default` lets you specify a default value to be used when the Trait doesn't exist yet or when its value is `undefined`.
+
+`loadable` tells the hook that you want to receive a Loadable instance of the Trait.
+
 ### useTrait
 
 `useTrait` returns an array of two elements:
@@ -173,6 +317,8 @@ function increaseCount() {
   setCount(({ value }) => value += 1);
 }
 ```
+
+`useTrait` accepts the same subscription configuration options of `useTraitValue`.
 
 ### getTrait
 
