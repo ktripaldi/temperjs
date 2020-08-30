@@ -12,6 +12,10 @@ export type TraitSetterValue<T> =
   | Promise<T>
   | ((helpers: SetterHelpers<T>) => T | Promise<T>)
 
+export interface BuildTraitOptions {
+  negletPrevious: boolean
+}
+
 export enum LoadableState {
   HAS_VALUE = 'hasValue',
   HAS_ERROR = 'hasError',
