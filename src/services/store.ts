@@ -13,10 +13,12 @@ import {
   StoreActions
 } from '../config/interfaces'
 
+// Checks if a variable is an array
 export function isArray(element: unknown): boolean {
   return typeof element !== 'undefined' && Array.isArray(element)
 }
 
+// Checks if a variable is a plain object (like { key: value })
 export function isPlainObject(element: unknown): boolean {
   return (
     typeof element === 'object' &&
@@ -26,6 +28,7 @@ export function isPlainObject(element: unknown): boolean {
   )
 }
 
+// Formats a log or error message
 export function format(message: string, ...replacements: string[]): string {
   let formattedString: string = message
   for (let replacement in replacements) {
@@ -37,10 +40,12 @@ export function format(message: string, ...replacements: string[]): string {
   return formattedString
 }
 
+// Logs a message in debug is enabled
 function log(logMessage: string, logValue: unknown | string = ''): void {
   if (store.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
 }
 
+// Returns a correlation id
 function makeCorrelationId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     var r = (Math.random() * 16) | 0,
@@ -49,29 +54,30 @@ function makeCorrelationId(): string {
   })
 }
 
+// this is where the store object is saved
 declare global {
   var store: Store
 }
 
+// Returns the actions exported from the store
 function getStoreActions(): StoreActions {
-  // Returns the root key of a given path
-  function getPathRootKey(path: string): string {
-    return path.split(store.pathSeparator)[0]
-  }
-
   // Retrieves the value of a Trait from an external service storage, if configured
   function tryImportingFromStorage(path: string): boolean {
     if (store.storageService) {
-      const storageKey = getPathRootKey(path)
+      // We want to import only root Traits, child Traits will be automatically computed
+      const storageKey = getPathRoot(path)
       if (store.storageService.get) {
         if (!traitExists(storageKey)) {
           const rootTrait = store.storageService.get(storageKey)
           if (rootTrait) {
-            exploreTraitTree(storageKey, rootTrait, { negletPrevious: true })
+            // This will set the Trait and its sub Traits, if any
+            buildTrait(storageKey, rootTrait, { negletPrevious: true })
+            // If log is enabled, we log the operation
             log(format(MESSAGES.LOGS.STORAGE_IMPORTED, storageKey), rootTrait)
             return true
           }
         }
+        // If the `storageService` lacks a `get` method, we'll throw an error
       } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
     }
     return false
@@ -81,16 +87,22 @@ function getStoreActions(): StoreActions {
   function trySavingToStorage(storageKey: string, storageValue: unknown): void {
     if (store.storageService) {
       if (typeof storageValue !== 'undefined') {
+        // We don't need to store functions
         if (storageValue !== 'function') {
           if (store.storageService.set) {
             store.storageService.set(storageKey, storageValue)
+            // If log is enabled, we log the operation
             log(format(MESSAGES.LOGS.STORAGE_SAVED, storageKey), storageValue)
+            // If the `storageService` lacks a `set` method, we'll throw an error
           } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET)
         }
+        // If the Trait value is `undefined`, we want to remove it from storage
       } else {
         if (store.storageService.clear) {
           store.storageService.clear(storageKey)
+          // If log is enabled, we log the operation
           log(format(MESSAGES.LOGS.STORAGE_REMOVED, storageKey))
+          // If the `storageService` hasn't a `clear` method, we'll throw an error
         } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
       }
     }
@@ -99,6 +111,29 @@ function getStoreActions(): StoreActions {
   // Check if a Trait exists
   function traitExists(path: string): boolean {
     return isArray(store.paths.get(path))
+  }
+
+  // Returns the root key of a given path
+  function getPathRoot(path: string): string {
+    return path.split(store.pathSeparator)[0]
+  }
+
+  // Returns the index of a root Trait
+  function getRootTraitIndex(path: string): number | undefined {
+    const index = store.paths.get(getPathRoot(path))
+    if (typeof index?.[0] === 'number') return index[0]
+    return undefined
+  }
+
+  // Returns the array path to reach the Trait
+  function getArrayPath(path: string): (string | number)[] {
+    if (traitExists(path)) return store.paths.get(path)!
+    const arrayPath = path.split(store.pathSeparator)
+    arrayPath.shift()
+    const rootIndex = getRootTraitIndex(path)
+    return typeof rootIndex !== 'undefined'
+      ? [rootIndex, ...arrayPath]
+      : [store.size, ...arrayPath]
   }
 
   // Check if a Trait is a selector
@@ -122,15 +157,8 @@ function getStoreActions(): StoreActions {
     )
   }
 
-  // Returns the index of a root Trait
-  function getRootTraitIndex(path: string): number | undefined {
-    const index = store.paths.get(getPathRootKey(path))
-    if (typeof index?.[0] === 'number') return index[0]
-    return undefined
-  }
-
   // Executes a callback for every child Trait
-  function executeCallbackForEveryChild(
+  function loopThroughPath(
     path: string,
     callback: (key: string) => void
   ): void {
@@ -144,8 +172,43 @@ function getStoreActions(): StoreActions {
     })
   }
 
+  // Updates all selectors
+  function updateSelectors(path: string): void {
+    const tiedTraits = getTiedTraits(path)
+    tiedTraits.forEach(tiedPath => {
+      const tiedTraitValue = resolveTrait(tiedPath, {
+        getSelectorCached: false
+      })
+      getSelector(tiedPath).value = tiedTraitValue
+      const subject = store.subjects.get(tiedPath)
+      if (subject?.hasObservers()) {
+        subject?.sink.next(tiedTraitValue)
+        // If log is enabled, we log the operation
+        log(
+          format(MESSAGES.LOGS.SELECTOR_UPDATED, tiedPath, path),
+          tiedTraitValue
+        )
+      }
+      updateSelectors(tiedPath)
+    })
+  }
+
+  // Notifies subscribers that the Trait has changed its value
+  function broadcastChange(path: string): void {
+    loopThroughPath(path, key => {
+      const subject = store.subjects.get(key)
+      const traitValue = resolveTrait(key)
+      if (subject?.hasObservers())
+        subject?.sink.next(
+          key !== path || isPlainObject(traitValue)
+            ? { ...(traitValue as object) }
+            : traitValue
+        )
+    })
+  }
+
   // Returns the value of a Trait
-  function getRawTrait(path: string): unknown {
+  function readTrait(path: string): unknown {
     if (traitExists(path) || tryImportingFromStorage(path)) {
       return (
         store.paths
@@ -162,51 +225,20 @@ function getStoreActions(): StoreActions {
     return undefined
   }
 
-  // Updates all selectors
-  function updateSelectors(path: string): void {
-    const tiedTraits = getTiedTraits(path)
-    tiedTraits.forEach(tiedPath => {
-      const tiedTraitValue = resolveTrait(tiedPath, {
-        getSelectorCached: false
-      })
-      getSelector(tiedPath).value = tiedTraitValue
-      const subject = store.subjects.get(tiedPath)
-      if (subject?.hasObservers()) {
-        subject?.sink.next(tiedTraitValue)
-        log(
-          format(MESSAGES.LOGS.SELECTOR_UPDATED, tiedPath, path),
-          tiedTraitValue
-        )
-      }
-      updateSelectors(tiedPath)
-    })
-  }
-
   // Returns the list of all Traits that depend on a given Trait
   function getTiedTraits(path: string): Set<string> {
     let tiedTraits: Set<string> = new Set()
-    executeCallbackForEveryChild(path, key =>
+    loopThroughPath(path, key =>
       store.tiedTraits.get(key)?.forEach(tiedTraits.add, tiedTraits)
     )
     return tiedTraits
   }
 
-  // Notifies subscribers that the Trait has changed its value
-  function broadcastChange(path: string): void {
-    executeCallbackForEveryChild(path, key => {
-      const subject = store.subjects.get(key)
-      const traitValue = resolveTrait(key)
-      if (subject?.hasObservers())
-        subject?.sink.next(
-          key !== path || isPlainObject(traitValue)
-            ? { ...(traitValue as object) }
-            : traitValue
-        )
-    })
-  }
-
   // Creates the wrapping objects when an orphan (sub) Trait is set
-  function buildTraitTree(path: string, nodeValue: unknown): [string, unknown] {
+  function getRootTraitTree(
+    path: string,
+    nodeValue: unknown
+  ): [string, unknown] {
     const arrayPath = path.split(store.pathSeparator)
     const rootPath = arrayPath.shift()!
     return [
@@ -221,21 +253,21 @@ function getStoreActions(): StoreActions {
     ]
   }
 
-  // Creates a Trait for every Trait in the tree
-  function exploreTraitTree(
+  // Sets the Trait and its sub Traits, if any
+  function buildTrait(
     path: string,
     traitValue: unknown,
     options?: BuildTraitOptions
   ): void {
-    function createTraitsFromTree(
+    function buildTraitFromTree(
       nodePath: string,
       nodeArrayPath: (number | string)[],
       nodeValue: unknown
     ): void {
-      createTrait(nodePath, nodeArrayPath, nodeValue, options)
+      registerTrait(nodePath, nodeArrayPath, nodeValue, options)
       if (isPlainObject(nodeValue)) {
         Object.keys(nodeValue as object).forEach(key => {
-          createTraitsFromTree(
+          buildTraitFromTree(
             `${nodePath}${store.pathSeparator}${key}`,
             [...nodeArrayPath, key],
             (nodeValue as Record<string, unknown>)[key]
@@ -243,22 +275,12 @@ function getStoreActions(): StoreActions {
         })
       }
     }
-    if (!traitExists(getPathRootKey(path))) {
-      const [nodePath, traitTree] = buildTraitTree(path, traitValue)
-      createTraitsFromTree(nodePath, getArrayPath(nodePath), traitTree)
-    } else createTraitsFromTree(path, getArrayPath(path), traitValue)
+    if (!traitExists(getPathRoot(path))) {
+      const [nodePath, traitTree] = getRootTraitTree(path, traitValue)
+      buildTraitFromTree(nodePath, getArrayPath(nodePath), traitTree)
+    } else buildTraitFromTree(path, getArrayPath(path), traitValue)
     // We need to notify all subscribers about the update
     broadcastChange(path)
-  }
-
-  function getArrayPath(path: string): (string | number)[] {
-    if (traitExists(path)) return store.paths.get(path)!
-    const arrayPath = path.split(store.pathSeparator)
-    arrayPath.shift()
-    const rootIndex = getRootTraitIndex(path)
-    return typeof rootIndex !== 'undefined'
-      ? [rootIndex, ...arrayPath]
-      : [store.size, ...arrayPath]
   }
 
   // Returns the value of the simple version of a Trait by path
@@ -266,11 +288,14 @@ function getStoreActions(): StoreActions {
     path: string,
     options?: ResolveTraitOptions
   ): Trait<T> | undefined {
-    const trait = getRawTrait(path)
+    const trait = readTrait(path)
+    // If `options.tiedPath` is set, we need to register that Trait as a selector
     if (typeof options?.tiedPath !== 'undefined') {
       const selector = getSelector(options.tiedPath)
       if (selector.correlationId === options.correlationId)
         selector.tiedTraits.add(path)
+      // If the `correlationId` changes, it means the selector has been updated
+      // so we need to remove the data we previously registered
       else {
         if (options?.correlationId) {
           selector.tiedTraits.forEach(item =>
@@ -284,6 +309,7 @@ function getStoreActions(): StoreActions {
       store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
     }
 
+    // If the Trait is a selector, we want to return the cached value whenever possible
     if (isSelector(path)) {
       return options?.getSelectorCached === false ||
         typeof getSelector(path).value === 'undefined'
@@ -322,6 +348,7 @@ function getStoreActions(): StoreActions {
     if (currentValue) {
       // Traits are type safe. Once set, they cannot change type.
       // If `traitValue` is a function, it must return always the same type
+      // If the provided value has different type from the previous one, we'll throw an error
       if (
         typeof currentValue !== 'undefined' &&
         typeof currentValue !== 'function' &&
@@ -343,11 +370,12 @@ function getStoreActions(): StoreActions {
 
   // Verifies that the path is a non empty string
   function checkPath(path?: string): void {
-    // `path` must be a string
+    // `path` must be a populated string because that's how the user refers to the Trait
+    // If the provided `path` is not a string, we'll throw an error
     if (typeof path !== 'string') {
       throw new Error(MESSAGES.ERRORS.PATH_NO_STRING)
     }
-    // `path` cannot be an empty string because that's how the user refers to the Trait
+    // If the provided `path` is an empty string, we'll throw an error
     if (path === '') {
       throw new Error(MESSAGES.ERRORS.PATH_EMPTY_STRING)
     }
@@ -377,19 +405,24 @@ function getStoreActions(): StoreActions {
 
   // Returns the value of a Trait
   function getTrait<T>(path: string): Trait<T> | undefined {
+    // If the store has not been created yet, we'll throw an error
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
     return resolveTrait<T>(path)
   }
 
   function setTrait<T>(path: string, traitValue: TraitSetterValue<T>): void {
+    // If the store has not been created yet, we'll throw an error
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
-    exploreTraitTree(path, traitValue)
+    // This will set the Trait and its sub Traits, if any
+    buildTrait(path, traitValue)
   }
 
-  // Sets the value of a Trait
-  function createTrait<T>(
+  // Registers the Trait
+  function registerTrait<T>(
     path: string,
     arrayPath: (number | string)[],
     traitValue: TraitSetterValue<T>,
@@ -413,20 +446,21 @@ function getStoreActions(): StoreActions {
       return
     }
     let valueToStore = deepMerge(currentValue, newValue)
-    // let valueToBroadcast = valueToStore
     if (isSelector(path)) {
+      // If a selector is overwritten with a qualified value, we need to unregister it
       if (typeof traitValue !== 'function') {
         getSelector(path).tiedTraits.forEach(item =>
           store.tiedTraits.get(item)?.delete(path)
         )
         store.selectors.delete(path)
       } else {
-        // Caches the value of the selector
+        // We want to cache the value of the selector
         getSelector(path).value = newValue
         valueToStore = traitValue
       }
     }
     let traits = store.traits
+    // We need to loop through the traits to set the Trait value
     arrayPath.forEach((key, index) => {
       if (index < arrayPath.length - 1) traits = (traits as any)[key]
       else (traits as any)[key] = valueToStore
@@ -437,30 +471,30 @@ function getStoreActions(): StoreActions {
     // If we have selectors that depend on this Trait, we need to dispatch the updated value for each one of them
     updateSelectors(path)
     // If a storage service has been set, we need to save the root Trait
-    trySavingToStorage(
-      getPathRootKey(path),
-      store.traits[arrayPath[0] as number]
-    )
+    trySavingToStorage(getPathRoot(path), store.traits[arrayPath[0] as number])
   }
 
-  // Subscribes a callback to a Trait
+  // Subscribes a callback to a Trait and returns a `Subscription` object
   function subscribeToTrait<T>(
     path: string,
     callback: (traitValue: Trait<T>) => void,
     defaultValue?: Trait<T>
   ): Subscription | undefined {
+    // If the store has not been created yet, we'll throw an error
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
-    // `callback` must be a function
+    // If the provided `callback` is not a function, we'll throw an error
     if (typeof callback !== 'function') {
       throw new Error(MESSAGES.ERRORS.SUBSCRIPTION_NO_CALLBACK)
     }
     if (!traitExists(path))
-      exploreTraitTree(path, defaultValue, { negletPrevious: true })
+      // This will set the Trait and its sub Traits, if any
+      buildTrait(path, defaultValue, { negletPrevious: true })
     return store.subjects.get(path)?.source$.subscribe<T>(callback)
   }
 
-  // Empties the store
+  // Destroys the store
   function destroy(): void {
     if (global.store) {
       // @ts-ignore
