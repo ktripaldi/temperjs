@@ -5,7 +5,7 @@
 ## Getting Started
 
 This section is meant to get you familiar with the Temper way of doing things.
-If you're looking for something specific, please read the API Documentation. If you're just starting out with Temper, read on!
+If you're looking for something specific, please read the [API Documentation](#api-documentation). If you're just starting out with Temper, read on!
 
 For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you reach the value of 5.
 
@@ -38,7 +38,6 @@ yarn add temperjs
 Components that use Temper states need some parent (preferably the root component) to be wrapped with the hoc `withTemper`.
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { withTemper } from 'temperjs';
 
@@ -61,7 +60,6 @@ Subscribed components will rerender everytime the Trait value changes.
 If you want to set a Trait, use can use the action `setTrait`:
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { withTemper } from 'temperjs';
 
@@ -76,7 +74,6 @@ export default withTemper(App);
 If you need to read from **and write to** a Trait, you can use the hook `useTrait()`:
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { useTrait } from 'temperjs';
 
@@ -110,7 +107,6 @@ export default Counter;
 In Temper selectors are regular Traits:
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { withTemper, setTrait } from 'temperjs';
 
@@ -118,7 +114,7 @@ function App() {
   // This is a regular Trait
   setTrait('count', 0);
   // This is a selector Trait
-  setTrait('isTargetReached', ({ get }) => get('count') > 5);
+  setTrait('isTargetReached', ({ get }) => get('count') >= 5);
 
   return <Counter />
 }
@@ -132,14 +128,13 @@ Temper encourages you to wrap related Traits in a single object.
 **When a Trait is an object, each attribute will become a new Trait that is individually updatable and subscribable**:
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { withTemper, setTrait } from 'temperjs';
 
 function App() {
   setTrait('counter', {
     count: 0,
-    isTargetReached: ({ get }) => get('count') > 5
+    isTargetReached: ({ get }) => get('count') >= 5
   });
 
   return <Counter />
@@ -152,7 +147,6 @@ You'll be able to reference nested Traits with the dot notation.
 If you just need to read a Trait, you can use the hook `useTraitValue()`:
 
 ```jsx
-// using ES6 modules
 import React from 'react';
 import { useTrait } from 'temperjs';
 
@@ -182,7 +176,7 @@ export default Counter;
 
 ### Wrapping things up
 
-Run the Counter on [Sandbox](https://codesandbox.io/s/temperjs-getting-started-o9l56?file=/src/App.js):
+Run the Counter on [Sandbox](https://codesandbox.io/s/temperjs-getting-started-o9l56?file=/src/App.js).
 
 ## API Documentation
 
@@ -334,6 +328,6 @@ const getTrait = require('temperjs').getTrait
 const height = getTrait('height');
 ```
 
-### Licence
+## Licence
 
 [MIT](LICENSE)
