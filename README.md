@@ -7,7 +7,7 @@
 This section is meant to get you familiar with the Temper way of doing things.
 If you're looking for something specific, please read the [API Documentation](#api-documentation). If you're just starting out with Temper, read on!
 
-For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you reach the value of 5.
+For the purpose of this guide, we'll create a simple counter that prints _You've reached the target!_ when you get to the value of 5.
 
 ### Create React App
 Temper is a state management library for React, so you need to have React installed and running to use Temper. The easiest and recommended way for bootstrapping a React application is to use [Create React App](https://github.com/facebook/create-react-app#creating-an-app):
@@ -35,7 +35,7 @@ yarn add temperjs
 
 ### withTemper
 
-Components that use Temper states need some parent (preferably the root component) to be wrapped with the hoc `withTemper`.
+If you want to use Temper states, you need to wrap your component (preferably the root component) with the hoc `withTemper`.
 
 ```jsx
 import React from 'react';
@@ -52,7 +52,7 @@ We'll implement the `Counter` component in the following section.
 
 ### Traits
 
-Temper's states are called **Traits**.
+Temper states are called **Traits**.
 Traits are globally shared units of state that components can subscribe to.
 **Traits can be read and written from any component.**
 Subscribed components will rerender everytime the Trait value changes.
@@ -61,7 +61,7 @@ If you want to set a Trait, use can use the action `setTrait`:
 
 ```jsx
 import React from 'react';
-import { withTemper } from 'temperjs';
+import { withTemper, setTrait } from 'temperjs';
 
 function App() {
   setTrait('count', 0);
@@ -71,7 +71,7 @@ function App() {
 export default withTemper(App);
 ```
 
-If you need to read from **and write to** a Trait, you can use the hook `useTrait()`:
+If you need to read from **and write to** a Trait, you can use the hook `useTrait`:
 
 ```jsx
 import React from 'react';
@@ -111,7 +111,7 @@ import React from 'react';
 import { withTemper, setTrait } from 'temperjs';
 
 function App() {
-  // This is a regular Trait
+  // This is a simple Trait
   setTrait('count', 0);
   // This is a selector Trait
   setTrait('isTargetReached', ({ get }) => get('count') >= 5);
@@ -134,7 +134,7 @@ import { withTemper, setTrait } from 'temperjs';
 function App() {
   setTrait('counter', {
     count: 0,
-    isTargetReached: ({ get }) => get('count') >= 5
+    isTargetReached: ({ get }) => get('counter.count') >= 5
   });
 
   return <Counter />
@@ -144,11 +144,11 @@ export default withTemper(App);
 ```
 
 You'll be able to reference nested Traits with the dot notation.
-If you just need to read a Trait, you can use the hook `useTraitValue()`:
+If you just need to read a Trait, you can use the hook `useTraitValue`:
 
 ```jsx
 import React from 'react';
-import { useTrait } from 'temperjs';
+import { useTrait, useTraitValue } from 'temperjs';
 
 function Counter() {
   const [count, setCount] = useTrait('counter.count');
@@ -182,7 +182,7 @@ Run the Counter on [Sandbox](https://codesandbox.io/s/temperjs-getting-started-o
 
 ### withTemper
 
-To be able to use Traits, you need to wrap your root component using the `withTemper()` hoc.
+If you want to use Temper states, you need to wrap your component (preferably the root component) with the hoc `withTemper`.
 
 ```jsx
 // using ES6 modules
@@ -216,10 +216,10 @@ export default withTemper(App, {
 });
 ```
 
-`pathSeparator` lets you set an alternative path separator.
+- `pathSeparator` lets you set an alternative path separator.
 If you change the path separator to `>` for instance, you'll be able to reference nested Trait like this: `exampleTrait>subTrait`.
 
-`storageService` lets you set a service to persist and retrieve Traits as you prefer.
+- `storageService` lets you set a service to persist and retrieve Traits as you prefer.
 The storage service must match the following interface:
 ```ts
 interface StorageService {
@@ -229,7 +229,7 @@ interface StorageService {
 }
 ```
 
-`debug`, if set to `true`, will log useful information on the browser console.
+- `debug`, if set to `true`, will log useful information on the browser console.
 
 ### setTrait
 
@@ -288,9 +288,9 @@ const count = useTraitValue('count', { default: 0 });
 const count = useTraitValue('asyncCount', { loadable: true });
 ```
 
-`default` lets you specify a default value to be used when the Trait doesn't exist yet or when its value is `undefined`.
+- `default` lets you specify a default value to be used when the Trait doesn't exist yet or when its value is `undefined`.
 
-`loadable` tells the hook that you want to receive a Loadable instance of the Trait.
+- `loadable` tells the hook that you want to receive a Loadable instance of the Trait.
 
 ### useTrait
 
