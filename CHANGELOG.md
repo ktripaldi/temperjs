@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.2.1 - 2020-08-31
+- Update readme
+
 ## 0.2.0 - 2020-08-30
 - Refactor Store to allow setting object Traits with selectors
 
