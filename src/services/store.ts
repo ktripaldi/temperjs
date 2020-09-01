@@ -244,11 +244,12 @@ function getStoreActions(): StoreActions {
     return [
       rootPath,
       arrayPath.length > 0
-        ? arrayPath.reduce((prev, curr, index) => {
-            ;(prev as Record<string, unknown>)[curr] =
-              index < arrayPath.length - 1 ? {} : nodeValue
-            return prev
-          }, {})
+        ? arrayPath.reduceRight(
+            (obj, next, index) => ({
+              [next]: index < arrayPath.length - 1 ? obj : nodeValue
+            }),
+            {}
+          )
         : nodeValue
     ]
   }
@@ -345,12 +346,11 @@ function getStoreActions(): StoreActions {
           })
         : traitValue
 
-    if (currentValue) {
+    if (typeof currentValue !== 'undefined') {
       // Traits are type safe. Once set, they cannot change type.
       // If `traitValue` is a function, it must return always the same type
       // If the provided value has different type from the previous one, we'll throw an error
       if (
-        typeof currentValue !== 'undefined' &&
         typeof currentValue !== 'function' &&
         typeof newValue !== 'undefined' &&
         typeof currentValue !== typeof newValue
