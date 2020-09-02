@@ -333,18 +333,19 @@ function getStoreActions(): StoreActions {
     let currentValue = negletPrevious ? undefined : resolveTrait(path)
     // If `traitValue` is a function, we need to call it so we can evaluate the result.
     // To do so, we need to inject an object containing the current Trait value and a method to get any other Trait
-    const newValue =
-      typeof traitValue === 'function'
-        ? traitValue({
-            value: currentValue,
-            get(traitPath: string): unknown {
-              return resolveTrait(traitPath, {
-                tiedPath: path,
-                correlationId: makeCorrelationId()
-              })
-            }
-          })
-        : traitValue
+    let newValue = traitValue
+    if (typeof traitValue === 'function')
+      try {
+        newValue = traitValue({
+          value: currentValue,
+          get(traitPath: string): unknown {
+            return resolveTrait(traitPath, {
+              tiedPath: path,
+              correlationId: makeCorrelationId()
+            })
+          }
+        })
+      } catch {}
 
     if (typeof currentValue !== 'undefined') {
       // Traits are type safe. Once set, they cannot change type.
