@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.2.2 - 2020-09-02
+- Fix non callable callbacks throwing error when setting a Trait
+- Fix nested Traits with more than two levels not being set
+
 ## 0.2.1 - 2020-08-31
 - Update readme
 
