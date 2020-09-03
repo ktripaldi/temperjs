@@ -1,7 +1,7 @@
 {
   "name": "temperjs",
   "version": "0.2.2",
-  "description": "State management library for React",
+  "description": "State management for React, made simple.",
   "homepage": "https://temperjs.org",
   "repository": "github:ktripaldi/temperjs",
   "bugs": "https://github.com/ktripaldi/temperjs/issues",
@@ -78,7 +78,7 @@
   "maintainers": [
     {
       "name": "Kenderson Tripaldi",
-      "email": "kenderson.tripaldi@icloud.com"
+      "email": "temperjs@icloud.com"
     }
   ],
   "license": "MIT"
