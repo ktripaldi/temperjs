@@ -12,8 +12,8 @@ export type TraitSetterValue<T> =
   | Promise<T>
   | ((helpers: SetterHelpers<T>) => T | Promise<T>)
 
-export interface BuildTraitOptions {
-  negletPrevious: boolean
+export interface RegisterTraitOptions {
+  ignorePrevious: boolean
 }
 
 export enum LoadableState {
@@ -70,24 +70,26 @@ export interface StoreOptions {
 }
 
 export interface ResolveTraitOptions {
-  getSelectorCached?: boolean
   tiedPath?: string
   correlationId?: string
 }
 
 export interface Store {
-  paths: Map<string, (string | number)[]>
+  paths: Set<string>
   pathSeparator: string
-  traits: unknown[]
+  traits: Record<string, unknown>
   subjects: Map<string, Subject<unknown>>
   tiedTraits: Map<string, Set<string>>
   selectors: Map<
     string,
-    { value: unknown; tiedTraits: Set<string>; correlationId: string }
+    {
+      value: (<T>(helpers: SetterHelpers<T>) => T | Promise<T>) | undefined
+      tiedTraits: Set<string>
+      correlationId: string
+    }
   >
   storageService: StorageService | undefined
   debug: boolean
-  size: number
 }
 
 export interface StoreActions {

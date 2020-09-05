@@ -5,12 +5,12 @@ import MESSAGES from '../../config/messages'
 function createStore(options?: StoreOptions) {
   storeActions.create(options)
   // Set some supporting Traits
-  storeActions.setTrait('baseNumberTrait', 5)
-  storeActions.setTrait('baseStringTrait', 'Test')
+  storeActions.setTrait('@baseNumberTrait', 5)
+  storeActions.setTrait('@baseStringTrait', 'Test')
   storeActions.setTrait(
-    'baseSelectorTrait',
+    '@baseSelectorTrait',
     ({ get }: SetterHelpers<unknown>): boolean =>
-      (get('baseNumberTrait') as number) < 10
+      (get('@baseNumberTrait') as number) < 10
   )
 }
 
@@ -30,19 +30,21 @@ function mockStorageService(options?: {
   return {
     get:
       options?.get !== false
-        ? jest.fn().mockReturnValue(testStoredValue)
+        ? jest.fn().mockImplementation(key => {
+            if (key.indexOf('@') === -1) return testStoredValue
+          })
         : undefined,
     set: options?.set !== false ? jest.fn() : undefined,
     clear: options?.clear !== false ? jest.fn() : undefined
   }
 }
 
-function randomString(): string {
-  return Math.random().toString(36)
-}
-
 function randomNumber(): number {
   return Math.floor(Math.random() * 100)
+}
+
+function randomString(): string {
+  return Math.random().toString(36)
 }
 
 const traitTrees = [
@@ -54,16 +56,16 @@ const traitTrees = [
 
 const testSelectors: unknown[] = [
   ({ get }: SetterHelpers<number>): number =>
-    Math.pow(get('baseNumberTrait') as number, 2) * Math.PI,
+    Math.pow(get('@baseNumberTrait') as number, 2) * Math.PI,
   ({ get }: SetterHelpers<string>): string =>
-    (get('baseStringTrait') as string).toUpperCase(),
+    (get('@baseStringTrait') as string).toUpperCase(),
   ({ get }: SetterHelpers<boolean>): string =>
-    (get('baseSelectorTrait') as boolean)
-      ? (get('baseStringTrait') as string).toUpperCase()
-      : (get('baseStringTrait') as string).toLowerCase()
+    (get('@baseSelectorTrait') as boolean)
+      ? (get('@baseStringTrait') as string).toUpperCase()
+      : (get('@baseStringTrait') as string).toLowerCase()
 ]
 
-function getRandomValues(): unknown[] {
+function getRandomValues(nth: number): unknown[] {
   const fixedRandomNumber = randomNumber()
   return [
     randomString(),
@@ -78,9 +80,8 @@ function getRandomValues(): unknown[] {
     () => Math.pow(fixedRandomNumber, 2),
     async () => Math.pow(fixedRandomNumber, 3),
     new Promise(resolve => resolve(fixedRandomNumber)),
-    false,
-    undefined,
-    ...testSelectors
+    nth % 2 === 0, // This is a boolean
+    undefined
   ]
 }
 
@@ -191,8 +192,8 @@ describe('The Store', () => {
 
   it(`should create a new Trait and set its value, if the Trait does not exist`, () => {
     createStore()
-    traitTrees.forEach(trait => {
-      getRandomValues().forEach((testValue, index) => {
+    traitTrees.forEach((trait, nth) => {
+      getRandomValues(nth).forEach((testValue, index) => {
         const expectedValue = getExpectedValue(`${trait}-${index}`, testValue)
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
         expect(storeActions.getTrait(`${trait}-${index}`)).toEqual(
@@ -216,8 +217,8 @@ describe('The Store', () => {
 
   it(`should update the Trait value, if the Trait already exists`, () => {
     createStore()
-    const randomValues1 = getRandomValues()
-    const randomValues2 = getRandomValues()
+    const randomValues1 = getRandomValues(0)
+    const randomValues2 = getRandomValues(1)
     traitTrees.forEach(trait => {
       randomValues1.forEach((testValue, index) => {
         const expectedValue = getExpectedValue(
@@ -252,8 +253,8 @@ describe('The Store', () => {
 
   it(`should do nothing, if you try to update an existing Trait with the same value`, () => {
     createStore()
-    traitTrees.forEach(trait => {
-      const randomValues = getRandomValues()
+    traitTrees.forEach((trait, nth) => {
+      const randomValues = getRandomValues(nth)
       randomValues.forEach((testValue, index) => {
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
         const traitValue1 = storeActions.getTrait(`${trait}-${index}`)
@@ -271,8 +272,8 @@ describe('The Store', () => {
 
   it(`should throw an error, if you try to change the type of an existing Trait`, () => {
     createStore()
-    traitTrees.forEach(trait => {
-      getRandomValues().forEach((testValue, index, randomValues) => {
+    traitTrees.forEach((trait, nth) => {
+      getRandomValues(nth).forEach((testValue, index, randomValues) => {
         const differentTypeTestValue = getDifferentTypeTestValue(
           testValue,
           randomValues
@@ -300,8 +301,8 @@ describe('The Store', () => {
 
   it(`should let you set to 'undefined' the value of an existing Trait`, () => {
     createStore()
-    traitTrees.forEach(trait => {
-      getRandomValues().forEach((testValue, index) => {
+    traitTrees.forEach((trait, nth) => {
+      getRandomValues(nth).forEach((testValue, index) => {
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
         storeActions.setTrait<undefined>(`${trait}-${index}`, undefined)
         expect(storeActions.getTrait(`${trait}-${index}`)).toEqual(undefined)
@@ -311,8 +312,8 @@ describe('The Store', () => {
 
   it(`should update the Trait value, if TraitValue is an updater`, () => {
     createStore()
-    traitTrees.forEach(trait => {
-      getRandomValues().forEach((testValue, index) => {
+    traitTrees.forEach((trait, nth) => {
+      getRandomValues(nth).forEach((testValue, index) => {
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
         const expectedValue = getExpectedValue(
           `${trait}-${index}`,
@@ -342,25 +343,25 @@ describe('The Store', () => {
 
   it(`should create a selector and dispatch its updates, if TraitValue is a callback that refers another Trait`, () => {
     traitTrees.forEach(trait => {
+      createStore()
       testSelectors.forEach((testValue, index) => {
-        createStore()
-        const callback1 = jest.fn()
+        const callback = jest.fn()
         // We set our selector which is expected to return its value based on the base Trait
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
-        storeActions.subscribeToTrait<unknown>(`${trait}-${index}`, callback1)
+        storeActions.subscribeToTrait<unknown>(`${trait}-${index}`, callback)
         // If the base Trait value changes, selector is expected to update accordingly
-        storeActions.setTrait<number>('baseNumberTrait', randomNumber())
-        storeActions.setTrait<string>('baseStringTrait', randomString())
+        storeActions.setTrait<number>('@baseNumberTrait', randomNumber())
+        storeActions.setTrait<string>('@baseStringTrait', randomString())
         const expectedValue = getExpectedValue(`${trait}-${index}`, testValue)
         // We can verify this checking the last call to the subscribed callback
-        expect(callback1).toHaveBeenLastCalledWith(expectedValue)
+        expect(callback).toHaveBeenLastCalledWith(expectedValue)
         // Or retrieving the updated value directly from the store
         expect(storeActions.getTrait(`${trait}-${index}`)).toEqual(
           expectedValue
         )
-        callback1.mockReset()
-        storeActions.destroy()
+        callback.mockReset()
       })
+      storeActions.destroy()
     })
   })
 
@@ -383,26 +384,17 @@ describe('The Store', () => {
     expect(selectorCallback).toHaveBeenCalledTimes(1)
   })
 
-  it(`should let you update a selector and the previous dependencies should should no longer have effect`, () => {
+  it(`should throw an error, if you try to update a selector`, () => {
     createStore()
-    const selectorCallback = jest.fn()
-    storeActions.setTrait<string>('basePath1', 'testValue1')
-    storeActions.setTrait<string>('basePath2', 'testValue2')
-    storeActions.setTrait<number>(
+    storeActions.setTrait<string>('basePath', 'testValue')
+    storeActions.setTrait<string>(
       'selectorPath',
-      ({ get }: SetterHelpers<number>) => selectorCallback(get('basePath1'))
+      ({ get }: SetterHelpers<string>) =>
+        (get('basePath') as string).toUpperCase()
     )
-    storeActions.setTrait<number>(
-      'selectorPath',
-      ({ get }: SetterHelpers<number>) => selectorCallback(get('basePath2'))
-    )
-    selectorCallback.mockClear()
-    // If you update the old dependency, the selector shouldn't update anymore
-    storeActions.setTrait<string>('basePath1', 'testValue3')
-    expect(selectorCallback).toHaveBeenCalledTimes(0)
-    // On the contrary, if you update the new dependency, the selector should update
-    storeActions.setTrait<string>('basePath2', 'testValue4')
-    expect(selectorCallback).toHaveBeenCalledTimes(1)
+    expect(() => {
+      storeActions.setTrait<string>('selectorPath', 'testValue')
+    }).toThrow(format(MESSAGES.ERRORS.SELECTOR_FROZEN, 'selectorPath'))
   })
 
   it(`should log when a selector is updated, if you have the debug enabled`, () => {
@@ -421,7 +413,7 @@ describe('The Store', () => {
     storeActions.subscribeToTrait('selectorPath', () => {})
     storeActions.setTrait<typeof testValue2>('basePath', testValue2)
     expect(consoleSpy).toHaveBeenCalledWith(
-      format(MESSAGES.LOGS.SELECTOR_UPDATED, 'selectorPath', 'basePath'),
+      format(MESSAGES.LOGS.TRAIT_UPDATED, 'selectorPath'),
       testValue2 * multiplier
     )
     consoleSpy.mockClear()
@@ -458,18 +450,19 @@ describe('The Store', () => {
     ).toThrow(MESSAGES.ERRORS.NO_STORE_FOUND)
   })
 
-  it(`should let you subscribe to a Trait`, () => {
+  it(`should let you subscribe to a Trait`, async () => {
     createStore()
-    const randomValues1 = getRandomValues()
-    const randomValues2 = getRandomValues()
     const testCallback = jest.fn()
     traitTrees.forEach(trait => {
+      const randomValues1 = getRandomValues(0)
+      const randomValues2 = getRandomValues(1)
       randomValues1.forEach((testValue, index) => {
         const expectedValue = getExpectedValue(
           `${trait}-${index}`,
           randomValues2[index]
         )
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
+        console.log(testValue)
         storeActions.subscribeToTrait<typeof testValue>(
           `${trait}-${index}`,
           testCallback
@@ -478,9 +471,12 @@ describe('The Store', () => {
           `${trait}-${index}`,
           randomValues2[index]
         )
+        console.log(randomValues2[index])
         expect(testCallback).toHaveBeenLastCalledWith(expectedValue)
+        testCallback.mockClear()
       })
     })
+    testCallback.mockReset()
   })
 
   it(`should let you subscribe to a non existing Trait`, () => {
@@ -516,11 +512,11 @@ describe('The Store', () => {
 
   it(`should throw an error, if you set a storage service without a 'get' method and try to get a Trait that doesn't exist`, () => {
     const storageService = mockStorageService({ get: false })
-    // @ts-ignore Here we create a new store with the storage service
-    createStore({ storageService })
-    expect(() => storeActions.getTrait('testPath')).toThrow(
-      MESSAGES.ERRORS.STORAGE_MISS_GET
-    )
+
+    expect(() =>
+      // @ts-ignore We don't need to get/set any Trait for this test because the supporting Traits are set at each test
+      createStore({ storageService })
+    ).toThrow(MESSAGES.ERRORS.STORAGE_MISS_GET)
   })
 
   it(`should throw an error, if you set a storage service without a 'set' method and try to set a Trait`, () => {
@@ -531,7 +527,7 @@ describe('The Store', () => {
     }).toThrow(MESSAGES.ERRORS.STORAGE_MISS_SET)
   })
 
-  it(`should throw an error, if you set a storage service without a 'set' method and try to clear a Trait`, () => {
+  it(`should throw an error, if you set a storage service without a 'clear' method and try to clear a Trait`, () => {
     const storageService = mockStorageService({ clear: false })
     // @ts-ignore
     createStore({ storageService })

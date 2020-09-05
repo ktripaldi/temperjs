@@ -7,8 +7,7 @@ const MESSAGES: {
     STORAGE_SAVED: '⬆️ <{0}> has been saved to storage:',
     STORAGE_REMOVED: '⏹️ <{0}> has been removed from storage.',
     TRAIT_CREATED: '🆕 <{0}> has been created:',
-    TRAIT_UPDATED: '🔄 <{0}> has been updated:',
-    SELECTOR_UPDATED: '*️⃣ <{0}> has been updated based on <{1}>:'
+    TRAIT_UPDATED: '🔄 <{0}> has been updated:'
   },
   ERRORS: {
     NO_STORE_FOUND:
@@ -23,7 +22,8 @@ const MESSAGES: {
       'Your storage service must implement a method to remove a Trait.',
     TRAIT_WRONG_TYPE:
       'Trait <{0}> has been initialized as <{1}> and cannot receive a <{2}> update',
-    SUBSCRIPTION_NO_CALLBACK: 'Trait cannot be subscribed without a callback'
+    SUBSCRIPTION_NO_CALLBACK: 'Trait cannot be subscribed without a callback',
+    SELECTOR_FROZEN: 'Trait <{0}> is a selector and cannot be manually updated'
   }
 }
 
