@@ -4,7 +4,7 @@ import { LoadableState, SetterHelpers } from '../..'
 import useTraitValue from '../useTraitValue'
 
 // Sets some random Trait values
-const randomValues = ['test', 1, { key: 2 }, false, null, new Map()]
+const randomValues = ['test', 1, { key: 2 }, false, undefined, new Map()]
 
 describe('The hook `useTraitValue`', () => {
   beforeEach(() => storeActions.create())
@@ -59,7 +59,7 @@ describe('The hook `useTraitValue`', () => {
     })
     const { result } = renderHook(() => useTraitValue('testPath2'))
     act(() => {
-      storeActions.setTrait('testPath1', testValue2)
+      storeActions.setTrait<typeof testValue2>('testPath1', testValue2)
     })
     expect(result.current).toEqual(testValue2.toUpperCase())
   })
