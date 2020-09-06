@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.0 - 2020-09-06
+- Make major internal optimizations
+
 ## 0.3.0 - 2020-09-03
 - Update readme after publishing the documentation website
 - Add contributing guide
