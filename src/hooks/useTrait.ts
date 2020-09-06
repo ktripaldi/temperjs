@@ -1,11 +1,11 @@
 import * as React from 'react'
+import useTraitValue from '../hooks/useTraitValue'
+import setTrait from '../actions/setTrait'
 import {
-  useTraitValue,
-  setTrait,
   SubscriptionOptions,
   SubscribedTrait,
   TraitSetterValue
-} from '..'
+} from '../config/interfaces'
 
 /**
  * `useTrait` returns a tuple with:

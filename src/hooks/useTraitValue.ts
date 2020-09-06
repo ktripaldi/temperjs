@@ -1,6 +1,10 @@
 import * as React from 'react'
 import storeActions from '../services/store'
-import { LoadableState, SubscribedTrait, SubscriptionOptions } from '..'
+import {
+  LoadableState,
+  SubscribedTrait,
+  SubscriptionOptions
+} from '../config/interfaces'
 
 /**
  * `useTraitValue` returns the up-to-date value of the specified Trait
