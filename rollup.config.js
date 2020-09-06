@@ -1,7 +1,6 @@
 import nodeResolve from '@rollup/plugin-node-resolve'
 import babel from '@rollup/plugin-babel'
 import replace from '@rollup/plugin-replace'
-import commonjs from '@rollup/plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
 import { terser } from 'rollup-plugin-terser'
 
@@ -18,15 +17,29 @@ const makeExternalPredicate = externalArr => {
   return id => pattern.test(id)
 }
 
+const external = makeExternalPredicate([
+  ...Object.keys(pkg.dependencies || {}),
+  ...Object.keys(pkg.peerDependencies || {})
+])
+
+const output = {
+  indent: false,
+  globals: {
+    react: 'React',
+    'lodash-es': 'lodashEs'
+  }
+}
+
 export default [
   // CommonJS
   {
     input: 'src/index.ts',
-    output: { file: 'lib/temper.js', format: 'cjs', indent: false },
-    external: makeExternalPredicate([
-      ...Object.keys(pkg.dependencies || {}),
-      ...Object.keys(pkg.peerDependencies || {})
-    ]),
+    output: {
+      file: 'lib/temper.js',
+      format: 'cjs',
+      ...output
+    },
+    external,
     plugins: [
       nodeResolve({
         extensions
@@ -35,19 +48,19 @@ export default [
       babel({
         extensions,
         babelHelpers: 'bundled'
-      }),
-      commonjs()
+      })
     ]
   },
 
   // ES
   {
     input: 'src/index.ts',
-    output: { file: 'es/temper.js', format: 'es', indent: false },
-    external: makeExternalPredicate([
-      ...Object.keys(pkg.dependencies || {}),
-      ...Object.keys(pkg.peerDependencies || {})
-    ]),
+    output: {
+      file: 'es/temper.js',
+      format: 'es',
+      ...output
+    },
+    external,
     plugins: [
       nodeResolve({
         extensions
@@ -56,15 +69,19 @@ export default [
       babel({
         extensions,
         babelHelpers: 'bundled'
-      }),
-      commonjs()
+      })
     ]
   },
 
   // ES for Browsers
   {
     input: 'src/index.ts',
-    output: { file: 'es/temper.mjs', format: 'es', indent: false },
+    output: {
+      file: 'es/temper.mjs',
+      format: 'es',
+      ...output
+    },
+    external,
     plugins: [
       nodeResolve({
         extensions
@@ -85,8 +102,7 @@ export default [
           unsafe_comps: true,
           warnings: false
         }
-      }),
-      commonjs()
+      })
     ]
   },
 
@@ -97,8 +113,9 @@ export default [
       file: 'dist/temper.js',
       format: 'umd',
       name: 'Temperjs',
-      indent: false
+      ...output
     },
+    external,
     plugins: [
       nodeResolve({
         extensions
@@ -111,8 +128,7 @@ export default [
       }),
       replace({
         'process.env.NODE_ENV': JSON.stringify('development')
-      }),
-      commonjs()
+      })
     ]
   },
 
@@ -123,8 +139,9 @@ export default [
       file: 'dist/temper.min.js',
       format: 'umd',
       name: 'Temperjs',
-      indent: false
+      ...output
     },
+    external,
     plugins: [
       nodeResolve({
         extensions
@@ -145,8 +162,7 @@ export default [
           unsafe_comps: true,
           warnings: false
         }
-      }),
-      commonjs()
+      })
     ]
   }
 ]

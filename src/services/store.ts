@@ -18,7 +18,7 @@ import {
   isEqual,
   isObjectLike,
   clone
-} from 'lodash'
+} from 'lodash-es'
 
 function cloneValue(value: unknown): unknown {
   const clonedValue = isObjectLike(value) ? clone(value) : value
