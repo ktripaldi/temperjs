@@ -8,8 +8,7 @@ export interface SetterHelpers<T> {
 }
 
 export type TraitSetterValue<T> =
-  | T
-  | Promise<T>
+  | Trait<T>
   | ((helpers: SetterHelpers<T>) => T | Promise<T>)
 
 export interface RegisterTraitOptions {
