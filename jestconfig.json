@@ -4,5 +4,6 @@
   },
   "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
-  "setupFilesAfterEnv": ["./jest.setup.ts"]
+  "setupFilesAfterEnv": ["./jest.setup.ts"],
+  "moduleNameMapper": { "^lodash-es$": "lodash" }
 }
