@@ -512,11 +512,11 @@ describe('The Store', () => {
 
   it(`should throw an error, if you set a storage service without a 'get' method and try to get a Trait that doesn't exist`, () => {
     const storageService = mockStorageService({ get: false })
-
-    expect(() =>
-      // @ts-ignore We don't need to get/set any Trait for this test because the supporting Traits are set at each test
-      createStore({ storageService })
-    ).toThrow(MESSAGES.ERRORS.STORAGE_MISS_GET)
+    // @ts-ignore
+    createStore({ storageService })
+    expect(() => storeActions.getTrait<unknown>('testNoPath')).toThrow(
+      MESSAGES.ERRORS.STORAGE_MISS_GET
+    )
   })
 
   it(`should throw an error, if you set a storage service without a 'set' method and try to set a Trait`, () => {
