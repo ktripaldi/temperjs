@@ -40,7 +40,7 @@ function mockStorageService(options?: {
 }
 
 function randomNumber(): number {
-  return Math.floor(Math.random() * 100)
+  return Math.floor(Math.random() * 10000)
 }
 
 function randomString(): string {
@@ -110,11 +110,7 @@ const updaterTestValues = [
   async ({ value }: SetterHelpers<Promise<number>>): Promise<number> =>
     ((await value) as number) * 10,
   ({ value }: SetterHelpers<boolean>): boolean => !(value as boolean),
-  (): number => 15,
-  ({ value }: SetterHelpers<number>): number => {
-    return (value as number) / 4
-  },
-  ({ value }: SetterHelpers<string>): string => (value as string).toUpperCase()
+  (): number => 15
 ]
 
 function getExpectedValue(traitPath: string, testValue: unknown) {
@@ -455,14 +451,15 @@ describe('The Store', () => {
     const testCallback = jest.fn()
     traitTrees.forEach(trait => {
       const randomValues1 = getRandomValues(0)
+      console.log(randomValues1)
       const randomValues2 = getRandomValues(1)
+      console.log(randomValues2)
       randomValues1.forEach((testValue, index) => {
         const expectedValue = getExpectedValue(
           `${trait}-${index}`,
           randomValues2[index]
         )
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
-        console.log(testValue)
         storeActions.subscribeToTrait<typeof testValue>(
           `${trait}-${index}`,
           testCallback
@@ -471,7 +468,6 @@ describe('The Store', () => {
           `${trait}-${index}`,
           randomValues2[index]
         )
-        console.log(randomValues2[index])
         expect(testCallback).toHaveBeenLastCalledWith(expectedValue)
         testCallback.mockClear()
       })
