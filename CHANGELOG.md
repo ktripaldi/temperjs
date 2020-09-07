@@ -1,6 +1,9 @@
 # Change Log
 
-## 0.4.0 - 2020-09-06
+## 0.4.2 - 2020-09-06
+- Fix Traits not being persisted when a storage service is set
+
+## 0.4.1 - 2020-09-06
 - Make major internal optimizations
 
 ## 0.3.0 - 2020-09-03
