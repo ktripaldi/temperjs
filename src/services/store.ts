@@ -333,8 +333,7 @@ function getStoreActions(): StoreActions {
 
     // If a storage service has been set, we need to save the root Trait
     const rootPath = getRootPath(path)
-    if (path === rootPath)
-      trySavingToStorage(rootPath, get(store.traits, [getRootPath(path)]))
+    trySavingToStorage(rootPath, get(store.traits, [getRootPath(path)]))
   }
 
   /***************************************/
