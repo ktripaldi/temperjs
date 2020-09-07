@@ -1,6 +1,6 @@
 # Temper &middot; ![](https://img.shields.io/npm/v/temperjs) ![](https://img.shields.io/github/issues/ktripaldi/temperjs) [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![alt text](Temper.png "Temper")
+![alt text](Temper.svg "Temper")
 
 ## Table of contents
 
