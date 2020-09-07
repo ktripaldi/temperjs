@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.4.3 - 2020-09-06
+- Update logo
+
 ## 0.4.2 - 2020-09-06
 - Fix Traits not being persisted when a storage service is set
 
