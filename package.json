@@ -1,6 +1,6 @@
 {
   "name": "temperjs",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "State management for React, made simple.",
   "homepage": "https://temperjs.org",
   "repository": "github:ktripaldi/temperjs",
