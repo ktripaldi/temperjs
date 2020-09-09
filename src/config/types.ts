@@ -1,49 +1,57 @@
 export type Trait<T> = T | Promise<T> | undefined
 
-export type SubscribedTrait<T> = Trait<T> | Loadable<T>
-
-export interface SetterHelpers<T> {
-  value: Trait<T>
-  get(path: string): unknown
-}
-
-export type TraitSetterValue<T> =
-  | Trait<T>
-  | ((helpers: SetterHelpers<T>) => T | Promise<T>)
-
-export interface RegisterTraitOptions {
-  ignorePrevious: boolean
-}
-
 export enum LoadableState {
   HAS_VALUE = 'hasValue',
   HAS_ERROR = 'hasError',
   LOADING = 'loading'
 }
 
-export interface Loadable<T> {
+export type Loadable<T> = {
   state: LoadableState
   value: Trait<T> | Error
 }
 
-export interface SubscriptionOptions<T> {
+export type SubscribedTrait<T> = Trait<T> | Loadable<T>
+
+export type SetterHelpers<T> = {
+  value: Trait<T>
+  get(path: string): unknown
+}
+
+export type SetterValue<T> =
+  | Trait<T>
+  | ((helpers: SetterHelpers<T>) => Trait<T>)
+
+export type Setter<T> = (traitValue: SetterValue<T>) => void
+
+export type WithSetter<T> = [T, Setter<T>]
+
+export type AsyncWithSetter<T> = [Promise<T>, Setter<Promise<T>>]
+
+export type LoadableWithSetter<T> = [Loadable<T>, Setter<Promise<T>>]
+
+export type RegisterTraitOptions = {
+  ignorePrevious: boolean
+}
+
+export type SubscriptionOptions<T> = {
   default?: Trait<T>
   loadable?: boolean
 }
 
-export interface Subject<T> {
+export type Subject<T> = {
   sink: Observer<T>
   source$: Subscribable
   hasObservers(): boolean
 }
 
-export interface Observer<T> {
+export type Observer<T> = {
   next(val: T): void
   error?(error?: any): void
   complete?(): void
 }
 
-export interface Subscribable {
+export type Subscribable = {
   subscribe<T>(observer: Observer<T>): Subscription
   subscribe<T>(
     next: (val: T) => void,
@@ -52,28 +60,28 @@ export interface Subscribable {
   ): Subscription
 }
 
-export interface Subscription {
+export type Subscription = {
   unsubscribe(): void
 }
 
-export interface StorageService {
+export type StorageService = {
   set: (key: string, value: unknown) => void
   get: (key: string) => unknown
   clear: (key: string) => unknown
 }
 
-export interface StoreOptions {
+export type StoreOptions = {
   pathSeparator?: string
   storageService?: StorageService
   debug?: boolean
 }
 
-export interface ResolveTraitOptions {
+export type ResolveTraitOptions = {
   tiedPath?: string
   correlationId?: string
 }
 
-export interface Store {
+export type Store = {
   paths: Set<string>
   pathSeparator: string
   traits: Record<string, unknown>
@@ -91,10 +99,10 @@ export interface Store {
   debug: boolean
 }
 
-export interface StoreActions {
+export type StoreActions = {
   create(options?: StoreOptions): void
   getTrait<T>(path: string): Trait<T>
-  setTrait<T>(path: string, traitValue: TraitSetterValue<T>): void
+  setTrait<T>(path: string, traitValue: SetterValue<T>): void
   subscribeToTrait<T>(
     path: string,
     callback: (traitValue: Trait<T>) => void,

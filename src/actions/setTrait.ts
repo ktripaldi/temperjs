@@ -1,13 +1,13 @@
 import storeActions from '../services/store'
-import {TraitSetterValue} from '..'
+import { SetterValue } from '..'
 
 /**
  * `setTrait` creates or updates the specified Trait
  * @template T
  * @param {string} path - This is the Trait identifier
- * @param {TraitSetterValue<T>} traitValue - This is the Trait value or the callback to set the value
+ * @param {SetterValue<T>} traitValue - This is the Trait value or the callback to set the value
  */
-function setTrait<T>(path: string, traitValue: TraitSetterValue<T>): void {
+function setTrait<T>(path: string, traitValue: SetterValue<T>): void {
   storeActions.setTrait<T>(path, traitValue)
 }
 

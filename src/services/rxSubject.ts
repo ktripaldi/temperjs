@@ -1,9 +1,4 @@
-import {
-  Subject,
-  Observer,
-  Subscribable,
-  Subscription
-} from '../config/interfaces'
+import { Subject, Observer, Subscribable, Subscription } from '../config/types'
 
 export default function createSubject<T>(): Subject<T> {
   let done: { key: 'error' | 'complete'; args: any[] }

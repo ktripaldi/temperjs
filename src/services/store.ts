@@ -2,14 +2,14 @@ import MESSAGES from '../config/messages'
 import createSubject from './rxSubject'
 import {
   Trait,
-  TraitSetterValue,
+  SetterValue,
   RegisterTraitOptions,
   Subscription,
   StoreOptions,
   ResolveTraitOptions,
   Store,
   StoreActions
-} from '../config/interfaces'
+} from '../config/types'
 import {
   has,
   get,
@@ -243,7 +243,7 @@ function getStoreActions(): StoreActions {
   // Registers the Trait
   function registerTrait<T>(
     path: string,
-    traitValue: TraitSetterValue<T>,
+    traitValue: SetterValue<T>,
     options?: RegisterTraitOptions
   ): void {
     const isNewInsertion = !traitExists(path)
@@ -364,7 +364,7 @@ function getStoreActions(): StoreActions {
     return resolveTrait<T>(path)
   }
 
-  function setTrait<T>(path: string, traitValue: TraitSetterValue<T>): void {
+  function setTrait<T>(path: string, traitValue: SetterValue<T>): void {
     // If the store has not been created yet, we'll throw an error
     if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     // If the provided `path` is not a populated string, we'll throw an error

@@ -4,7 +4,7 @@ import {
   LoadableState,
   SubscribedTrait,
   SubscriptionOptions
-} from '../config/interfaces'
+} from '../config/types'
 
 /**
  * `useTraitValue` returns the up-to-date value of the specified Trait

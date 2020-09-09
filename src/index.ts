@@ -5,13 +5,17 @@ export { default as useTrait } from './hooks/useTrait'
 export { default as useTraitValue } from './hooks/useTraitValue'
 export {
   Trait,
-  SubscribedTrait,
-  TraitSetterValue,
   Loadable,
   LoadableState,
+  SubscribedTrait,
+  SetterHelpers,
+  SetterValue,
+  Setter,
+  WithSetter,
+  AsyncWithSetter,
+  LoadableWithSetter,
   SubscriptionOptions,
   Subscription,
-  SetterHelpers,
   StorageService,
   StoreOptions
-} from './config/interfaces'
+} from './config/types'
