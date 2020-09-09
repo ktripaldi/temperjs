@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.5.0 - 2020-09-09
+- Add tests for `rxSubject`
+
 ## 0.4.4 - 2020-09-09
 - Fix `SetterValue` type
 - Convert interfaces to types and add some new types
