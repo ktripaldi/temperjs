@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.4.4 - 2020-09-09
+- Fix `SetterValue` type
+- Convert interfaces to types and add some new types
+
 ## 0.4.3 - 2020-09-06
 - Update logo
 
