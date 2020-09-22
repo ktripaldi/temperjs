@@ -17,11 +17,11 @@ import {
   isPlainObject,
   isEqual,
   isObjectLike,
-  clone
+  cloneDeep
 } from 'lodash-es'
 
 function cloneValue(value: unknown): unknown {
-  const clonedValue = isObjectLike(value) ? clone(value) : value
+  const clonedValue = isObjectLike(value) ? cloneDeep(value) : value
   if (
     isPlainObject(clonedValue) &&
     Object.keys(clonedValue as object).length === 0
