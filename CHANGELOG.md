@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.5.1 - 2020-09-22
+- Make minor internal optimizations
+
 ## 0.5.0 - 2020-09-09
 - Add tests for `rxSubject`
 
