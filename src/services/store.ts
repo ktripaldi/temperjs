@@ -88,7 +88,7 @@ function getStoreActions(): StoreActions {
   // Saves the value of a Trait to an external service storage, if configured
   function trySavingToStorage(storageKey: string, storageValue: unknown): void {
     if (store.storageService) {
-      if (typeof storageValue !== 'undefined') {
+      if (storageValue !== undefined) {
         // We don't need to store functions
         if (storageValue !== 'function') {
           if (store.storageService.set) {
@@ -206,7 +206,7 @@ function getStoreActions(): StoreActions {
     options?: ResolveTraitOptions
   ): Trait<T> | undefined {
     // If `options.tiedPath` is set, we need to register that Trait as a selector
-    if (typeof options?.tiedPath !== 'undefined') {
+    if (options?.tiedPath !== undefined) {
       const selector = getSelector(options.tiedPath)
       if (selector.correlationId === options.correlationId)
         selector.tiedTraits.add(path)
@@ -271,8 +271,8 @@ function getStoreActions(): StoreActions {
     // If `traitValue` is a function, it must return always the same type
     // If the provided value has different type from the previous one, we'll throw an error
     if (
-      typeof currentValue !== 'undefined' &&
-      typeof newValue !== 'undefined' &&
+      currentValue !== undefined &&
+      newValue !== undefined &&
       typeof currentValue !== typeof newValue
     ) {
       throw new Error(
@@ -285,8 +285,7 @@ function getStoreActions(): StoreActions {
       )
     }
     // If the Trait value doesn't change, we won't need to do anything
-    if (typeof currentValue !== 'undefined' && isEqual(currentValue, newValue))
-      return
+    if (currentValue !== undefined && isEqual(currentValue, newValue)) return
 
     // We store the actual function for future reference
     if (isSelector(path) && typeof traitValue === 'function') {

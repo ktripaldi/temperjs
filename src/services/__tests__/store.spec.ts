@@ -139,8 +139,8 @@ function getDifferentTypeTestValue(
   testValues.some(value => {
     // Any trait can receive both `undefined` or an updater callback
     if (
+      value !== undefined &&
       typeof value !== 'function' &&
-      typeof value !== 'undefined' &&
       typeof value !== typeof testValue
     ) {
       differentTypeTestValue = value
@@ -277,7 +277,7 @@ describe('The Store', () => {
         storeActions.setTrait<typeof testValue>(`${trait}-${index}`, testValue)
         const previousValueType = getValueType(`${trait}-${index}`, testValue)
         // If a Trait is `undefined` it can receive updates of any type
-        if (typeof testValue !== 'undefined')
+        if (testValue !== undefined)
           expect(() => {
             storeActions.setTrait<typeof differentTypeTestValue>(
               `${trait}-${index}`,
