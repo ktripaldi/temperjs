@@ -42,11 +42,6 @@ export function format(message: string, ...replacements: string[]): string {
   return formattedString
 }
 
-// Logs a message in debug is enabled
-function log(logMessage: string, logValue: unknown | string = ''): void {
-  if (store.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
-}
-
 // Returns a correlation id
 function makeCorrelationId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -56,21 +51,23 @@ function makeCorrelationId(): string {
   })
 }
 
-// this is where the store object is saved
-declare global {
-  var store: Store
-}
-
 // Returns the actions exported from the store
 const storeActions = (function(): StoreActions {
+  // this is where the store object is saved
+  let store: Store | undefined
+
+  // Logs a message in debug is enabled
+  function log(logMessage: string, logValue: unknown | string = ''): void {
+    if (store!.debug) console.log(`${logMessage}`, logValue) // tslint:disable-line:no-console
+  }
+
   // Retrieves the value of a Trait from an external service storage, if configured
   function tryImportingFromStorage(path: string): boolean {
-    if (store.storageService) {
+    if (store!.storageService) {
       // We want to import only root Traits, child Traits will be automatically computed
       const storageKey = getRootPath(path)
-      if (store.storageService.get) {
         if (!traitExists(storageKey)) {
-          const rootTrait = store.storageService.get(storageKey)
+          const rootTrait = store!.storageService.get(storageKey)
           if (rootTrait) {
             // This will set the Trait and its sub Traits, if any
             registerTrait(storageKey, rootTrait, { ignorePrevious: true })
@@ -79,50 +76,42 @@ const storeActions = (function(): StoreActions {
             return true
           }
         }
-        // If the `storageService` lacks a `get` method, we'll throw an error
-      } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
     }
     return false
   }
 
   // Saves the value of a Trait to an external service storage, if configured
   function trySavingToStorage(storageKey: string, storageValue: unknown): void {
-    if (store.storageService) {
+    if (store!.storageService) {
       if (storageValue !== undefined) {
         // We don't need to store functions
         if (storageValue !== 'function') {
-          if (store.storageService.set) {
-            store.storageService.set(storageKey, storageValue)
+            store!.storageService.set(storageKey, storageValue)
             // If log is enabled, we log the operation
             log(format(MESSAGES.LOGS.STORAGE_SAVED, storageKey), storageValue)
-            // If the `storageService` lacks a `set` method, we'll throw an error
-          } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET)
         }
         // If the Trait value is `undefined`, we want to remove it from storage
       } else {
-        if (store.storageService.clear) {
-          store.storageService.clear(storageKey)
+          store!.storageService.clear(storageKey)
           // If log is enabled, we log the operation
           log(format(MESSAGES.LOGS.STORAGE_REMOVED, storageKey))
-          // If the `storageService` hasn't a `clear` method, we'll throw an error
-        } else throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
       }
     }
   }
 
   // Check if a Trait exists
   function traitExists(path: string): boolean {
-    return store.paths.has(path)
+    return store!.paths.has(path)
   }
 
   // Returns the root key of a given path
   function getRootPath(path: string): string {
-    return path.split(store.pathSeparator)[0]
+    return path.split(store!.pathSeparator)[0]
   }
 
   // Check if a Trait is a selector
   function isSelector(path: string): boolean {
-    return store.selectors.has(path)
+    return store!.selectors.has(path)
   }
 
   // Returns the selector value (by setting it, if it doesn't exist)
@@ -130,8 +119,8 @@ const storeActions = (function(): StoreActions {
     path: string
   ): { value: unknown; tiedTraits: Set<string>; correlationId: string } {
     return (
-      store.selectors.get(path) ??
-      store.selectors
+      store!.selectors.get(path) ??
+      store!.selectors
         .set(path, {
           value: undefined,
           tiedTraits: new Set(),
@@ -146,11 +135,11 @@ const storeActions = (function(): StoreActions {
     path: string,
     callback: (key: string) => void
   ): void {
-    const pathParts = path.split(store.pathSeparator)
+    const pathParts = path.split(store!.pathSeparator)
     let incrementalPath: string
     pathParts.forEach(key => {
       incrementalPath = incrementalPath
-        ? `${incrementalPath}${store.pathSeparator}${key}`
+        ? `${incrementalPath}${store!.pathSeparator}${key}`
         : key
       callback(incrementalPath)
     })
@@ -173,9 +162,9 @@ const storeActions = (function(): StoreActions {
   // Notifies subscribers that the Trait has changed its value
   function broadcastChange(path: string): void {
     loopThroughPath(path, key => {
-      const subject = store.subjects.get(key)
+      const subject = store!.subjects.get(key)
       if (subject?.hasObservers()) {
-        subject?.sink.next(cloneValue(get(store.traits, key)))
+        subject?.sink.next(cloneValue(get(store!.traits, key)))
       }
     })
   }
@@ -183,10 +172,10 @@ const storeActions = (function(): StoreActions {
   // Returns the value of a Trait
   function readTrait(path: string): unknown {
     if (
-      has(store.traits, path.split(store.pathSeparator)) ||
+      has(store!.traits, path.split(store!.pathSeparator)) ||
       tryImportingFromStorage(path)
     ) {
-      return get(store.traits, path.split(store.pathSeparator))
+      return get(store!.traits, path.split(store!.pathSeparator))
     }
     return undefined
   }
@@ -195,7 +184,7 @@ const storeActions = (function(): StoreActions {
   function getTiedTraits(path: string): Set<string> {
     let tiedTraits: Set<string> = new Set()
     loopThroughPath(path, key =>
-      store.tiedTraits.get(key)?.forEach(tiedTraits.add, tiedTraits)
+      store!.tiedTraits.get(key)?.forEach(tiedTraits.add, tiedTraits)
     )
     return tiedTraits
   }
@@ -215,14 +204,14 @@ const storeActions = (function(): StoreActions {
       else {
         if (options?.correlationId) {
           selector.tiedTraits.forEach(item =>
-            store.tiedTraits.get(item)?.delete(options.tiedPath!)
+            store!.tiedTraits.get(item)?.delete(options.tiedPath!)
           )
           selector.tiedTraits.clear()
           selector.tiedTraits.add(path)
           selector.correlationId = options.correlationId
         }
       }
-      store.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
+      store!.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
     }
     return readTrait(path) as Trait<T>
   }
@@ -298,21 +287,21 @@ const storeActions = (function(): StoreActions {
       if (!Object.isSealed(newValue)) Object.seal(newValue)
       Object.keys(newValue as object).forEach(key =>
         registerTrait(
-          `${path}${store.pathSeparator}${key}`,
+          `${path}${store!.pathSeparator}${key}`,
           (newValue as Record<string, unknown>)[key]
         )
       )
       // Otherwise, we set the Trait value
     } else {
-      set(store.traits, path.split(store.pathSeparator), newValue)
+      set(store!.traits, path.split(store!.pathSeparator), newValue)
     }
 
     if (isNewInsertion) {
-      store.paths.add(path)
-      store.subjects.set(path, createSubject())
+      store!.paths.add(path)
+      store!.subjects.set(path, createSubject())
     }
 
-    const storedValue = get(store.traits, path.split(store.pathSeparator))
+    const storedValue = get(store!.traits, path.split(store!.pathSeparator))
 
     // Objects may contain setter or selectors. This ensures they don't get unnecessarily updated
     if (isObject && isEqual(currentValue, storedValue)) return
@@ -332,7 +321,7 @@ const storeActions = (function(): StoreActions {
 
     // If a storage service has been set, we need to save the root Trait
     const rootPath = getRootPath(path)
-    trySavingToStorage(rootPath, get(store.traits, [getRootPath(path)]))
+    trySavingToStorage(rootPath, get(store!.traits, [getRootPath(path)]))
   }
 
   /***************************************/
@@ -341,8 +330,17 @@ const storeActions = (function(): StoreActions {
 
   // Creates the global store object
   function create(options?: StoreOptions) {
-    if (!global.store)
-      global.store = {
+    // If the `storageService` hasn't the required methods, we'll throw an error
+    if (options?.storageService) {
+      if (typeof options.storageService.get !== 'function')
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET) 
+      if (typeof options.storageService.set !== 'function')
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET) 
+      if (typeof options.storageService.clear !== 'function')
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR) 
+    }
+    if (!store)
+      store = {
         paths: new Set(),
         pathSeparator: options?.pathSeparator ?? '.',
         traits: {},
@@ -357,7 +355,7 @@ const storeActions = (function(): StoreActions {
   // Returns the value of a Trait
   function getTrait<T>(path: string): Trait<T> | undefined {
     // If the store has not been created yet, we'll throw an error
-    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    if (!store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
     return resolveTrait<T>(path)
@@ -365,7 +363,7 @@ const storeActions = (function(): StoreActions {
 
   function setTrait<T>(path: string, traitValue: SetterValue<T>): void {
     // If the store has not been created yet, we'll throw an error
-    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    if (!store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
     // Selectors cannot be updated
@@ -378,7 +376,7 @@ const storeActions = (function(): StoreActions {
     } else {
       registerTrait(
         rootPath,
-        (set({}, path.split(store.pathSeparator), traitValue) as Record<
+        (set({}, path.split(store!.pathSeparator), traitValue) as Record<
           string,
           unknown
         >)[rootPath]
@@ -393,7 +391,7 @@ const storeActions = (function(): StoreActions {
     defaultValue?: Trait<T>
   ): Subscription | undefined {
     // If the store has not been created yet, we'll throw an error
-    if (!global.store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
+    if (!store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     // If the provided `path` is not a populated string, we'll throw an error
     checkPath(path)
     // If the provided `callback` is not a function, we'll throw an error
@@ -403,15 +401,12 @@ const storeActions = (function(): StoreActions {
     if (!traitExists(path)) {
       registerTrait(path, defaultValue, { ignorePrevious: true })
     }
-    return store.subjects.get(path)?.source$.subscribe<T>(callback)
+    return store!.subjects.get(path)?.source$.subscribe<T>(callback)
   }
 
   // Destroys the store
   function destroy(): void {
-    if (global.store) {
-      // @ts-ignore
-      delete global.store
-    }
+    if (store) store = undefined
   }
 
   return {

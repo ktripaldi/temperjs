@@ -506,30 +506,25 @@ describe('The Store', () => {
     expect(storageService.clear).toHaveBeenCalled()
   })
 
-  it(`should throw an error, if you set a storage service without a 'get' method and try to get a Trait that doesn't exist`, () => {
+  it(`should throw an error, if you set a storage service without a 'get' method`, () => {
     const storageService = mockStorageService({ get: false })
     // @ts-ignore
-    createStore({ storageService })
-    expect(() => storeActions.getTrait<unknown>('testNoPath')).toThrow(
+    expect(() => createStore({ storageService })).toThrow(
       MESSAGES.ERRORS.STORAGE_MISS_GET
     )
   })
 
-  it(`should throw an error, if you set a storage service without a 'set' method and try to set a Trait`, () => {
+  it(`should throw an error, if you set a storage service without a 'set' method`, () => {
     const storageService = mockStorageService({ set: false })
-    expect(() => {
-      // @ts-ignore We actually don't need to set any Trait for this test because the supporting Traits are set at each test
-      createStore({ storageService })
+    // @ts-ignore
+    expect(() => { createStore({ storageService })
     }).toThrow(MESSAGES.ERRORS.STORAGE_MISS_SET)
   })
 
-  it(`should throw an error, if you set a storage service without a 'clear' method and try to clear a Trait`, () => {
+  it(`should throw an error, if you set a storage service without a 'clear' method`, () => {
     const storageService = mockStorageService({ clear: false })
     // @ts-ignore
-    createStore({ storageService })
-    expect(() =>
-      storeActions.setTrait<undefined>('testPath', undefined)
-    ).toThrow(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
+    expect(() => createStore({ storageService })).toThrow(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
   })
 
   it(`should log when a Trait is retrieved from the storage, if you have the debug enabled and a storage service set`, () => {
