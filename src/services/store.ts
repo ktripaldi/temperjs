@@ -62,7 +62,7 @@ declare global {
 }
 
 // Returns the actions exported from the store
-function getStoreActions(): StoreActions {
+const storeActions = (function(): StoreActions {
   // Retrieves the value of a Trait from an external service storage, if configured
   function tryImportingFromStorage(path: string): boolean {
     if (store.storageService) {
@@ -421,8 +421,6 @@ function getStoreActions(): StoreActions {
     subscribeToTrait,
     destroy
   }
-}
-
-const storeActions = getStoreActions()
+})()
 
 export default storeActions
