@@ -52,7 +52,7 @@ function makeCorrelationId(): string {
 }
 
 // Returns the actions exported from the store
-const storeActions = (function(): StoreActions {
+const storeActions = (function (): StoreActions {
   // this is where the store object is saved
   let store: Store | undefined
 
@@ -66,16 +66,16 @@ const storeActions = (function(): StoreActions {
     if (store!.storageService) {
       // We want to import only root Traits, child Traits will be automatically computed
       const storageKey = getRootPath(path)
-        if (!traitExists(storageKey)) {
-          const rootTrait = store!.storageService.get(storageKey)
-          if (rootTrait) {
-            // This will set the Trait and its sub Traits, if any
-            registerTrait(storageKey, rootTrait, { ignorePrevious: true })
-            // If log is enabled, we log the operation
-            log(format(MESSAGES.LOGS.STORAGE_IMPORTED, storageKey), rootTrait)
-            return true
-          }
+      if (!traitExists(storageKey)) {
+        const rootTrait = store!.storageService.get(storageKey)
+        if (rootTrait) {
+          // This will set the Trait and its sub Traits, if any
+          registerTrait(storageKey, rootTrait, { ignorePrevious: true })
+          // If log is enabled, we log the operation
+          log(format(MESSAGES.LOGS.STORAGE_IMPORTED, storageKey), rootTrait)
+          return true
         }
+      }
     }
     return false
   }
@@ -86,15 +86,15 @@ const storeActions = (function(): StoreActions {
       if (storageValue !== undefined) {
         // We don't need to store functions
         if (storageValue !== 'function') {
-            store!.storageService.set(storageKey, storageValue)
-            // If log is enabled, we log the operation
-            log(format(MESSAGES.LOGS.STORAGE_SAVED, storageKey), storageValue)
+          store!.storageService.set(storageKey, storageValue)
+          // If log is enabled, we log the operation
+          log(format(MESSAGES.LOGS.STORAGE_SAVED, storageKey), storageValue)
         }
         // If the Trait value is `undefined`, we want to remove it from storage
       } else {
-          store!.storageService.clear(storageKey)
-          // If log is enabled, we log the operation
-          log(format(MESSAGES.LOGS.STORAGE_REMOVED, storageKey))
+        store!.storageService.clear(storageKey)
+        // If log is enabled, we log the operation
+        log(format(MESSAGES.LOGS.STORAGE_REMOVED, storageKey))
       }
     }
   }
@@ -333,11 +333,11 @@ const storeActions = (function(): StoreActions {
     // If the `storageService` hasn't the required methods, we'll throw an error
     if (options?.storageService) {
       if (typeof options.storageService.get !== 'function')
-        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET) 
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_GET)
       if (typeof options.storageService.set !== 'function')
-        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET) 
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_SET)
       if (typeof options.storageService.clear !== 'function')
-        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR) 
+        throw new Error(MESSAGES.ERRORS.STORAGE_MISS_CLEAR)
     }
     if (!store)
       store = {
