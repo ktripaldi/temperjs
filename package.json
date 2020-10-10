@@ -34,6 +34,7 @@
     "test": "jest --config jestconfig.json --silent",
     "test:watch": "yarn run test --watchAll",
     "test:cov": "yarn run test --coverage",
+    "test:staged": "cross-env CI=true yarn run test --findRelatedTests",
     "format": "prettier --write \"src/**/*.ts\" \"**/*.md\"",
     "lint": "eslint --ext ts src"
   },
@@ -67,7 +68,9 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^3.0.0",
+    "husky": "^4.3.0",
     "jest": "^26.4.0",
+    "lint-staged": "^10.3.0",
     "prettier": "^2.0.5",
     "react": "^16.13.1",
     "react-test-renderer": "^16.13.1",
@@ -78,6 +81,18 @@
     "rxjs": "^6.6.3",
     "ts-jest": "^26.1.1",
     "typescript": "^3.8.3"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "yarn test:staged"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   },
   "author": "Kenderson Tripaldi",
   "maintainers": [
