@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { withTemper, setTrait, SetterHelpers } from 'temperjs'
 import Counter from './Counter'
 
