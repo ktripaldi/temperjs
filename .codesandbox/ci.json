@@ -1,3 +1,4 @@
 {
+  "packages": ["packages/temperjs", "packages/temperjs-store"],
   "sandboxes": ["/.codesandbox/sandboxes/counter"]
 }
