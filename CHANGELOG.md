@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.0 - 2020-12-27
+
+- Separate store from React utilities
+
 ## 0.5.2 - 2020-10-10
 
 - Make minor internal optimizations
