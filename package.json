@@ -8,5 +8,6 @@
     "build": "yarn --cwd packages/temperjs-store build && yarn --cwd packages/temperjs build",
     "test": "yarn --cwd packages/temperjs-store test && yarn --cwd packages/temperjs test",
     "lint": "yarn --cwd packages/temperjs-store lint && yarn --cwd packages/temperjs lint"
-  }
+  },
+  "version": "1.0.0"
 }
