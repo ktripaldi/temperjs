@@ -1,7 +1,7 @@
 {
   "name": "temperjs",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "State management for React, made simple.",
   "homepage": "https://temperjs.org",
   "repository": "github:ktripaldi/temperjs",
@@ -43,7 +43,7 @@
     "react": "17.0.1"
   },
   "dependencies": {
-    "temperjs-store": "1.0.0"
+    "temperjs-store": "^1.0.1"
   },
   "devDependencies": {
     "@babel/core": "7.12.10",
