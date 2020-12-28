@@ -9,7 +9,4 @@ types
 
 yarn-error.log
 
-# Ignore any yarn package other than temperjs and temperjs-store
-packages/*
-!packages/temperjs
-!packages/temperjs-store
+.eslintcache

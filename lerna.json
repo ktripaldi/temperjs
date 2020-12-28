@@ -1,9 +1,6 @@
 {
-  "version": "1.0.0",
-  "packages": [
-    "packages/*"
-  ],
+  "version": "independent",
+  "packages": ["temperjs-store", "temperjs", "sandboxes/*"],
   "npmClient": "yarn",
-  "useWorkspaces": true,
-  "version": "independent"
+  "useWorkspaces": true
 }

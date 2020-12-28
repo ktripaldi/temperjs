@@ -2,14 +2,15 @@
   "name": "temperjs",
   "private": true,
   "workspaces": [
-    "packages/temperjs-store",
-    "packages/temperjs"
+    "temperjs-store",
+    "temperjs",
+    "sandboxes/*"
   ],
   "scripts": {
-    "build": "lerna run build",
-    "test": "lerna run test",
-    "test:staged": "cross-env CI=true lerna run test -- --findRelatedTests",
-    "lint": "lerna run lint",
+    "build": "lerna run --scope={temperjs-store,temperjs} build",
+    "test": "lerna run --scope={temperjs-store,temperjs} test",
+    "test:staged": "cross-env CI=true lerna run --scope={temperjs-store,temperjs} test -- --findRelatedTests",
+    "lint": "lerna run --scope={temperjs-store,temperjs} lint",
     "publish-all": "lerna publish"
   },
   "devDependencies": {
@@ -19,7 +20,7 @@
     "lint-staged": "10.5.3"
   },
   "lint-staged": {
-    "packages/**/*.{ts,tsx,json}": [
+    "packages/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write",
       "yarn test:staged"
