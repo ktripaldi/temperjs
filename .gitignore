@@ -8,5 +8,6 @@ es
 types
 
 yarn-error.log
+lerna-debug.log
 
 .eslintcache
