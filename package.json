@@ -11,7 +11,7 @@
     "test": "lerna run --scope={temperjs-store,temperjs} test",
     "test:staged": "cross-env CI=true lerna run --scope={temperjs-store,temperjs} test -- --findRelatedTests",
     "lint": "lerna run --scope={temperjs-store,temperjs} lint",
-    "publish-all": "lerna publish"
+    "publish-all": "HUSKY_SKIP_HOOKS=1 lerna publish"
   },
   "devDependencies": {
     "cz-conventional-changelog": "3.3.0",
