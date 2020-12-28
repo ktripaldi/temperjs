@@ -19,7 +19,7 @@
     "lint-staged": "10.5.3"
   },
   "lint-staged": {
-    "packages/**/*.{ts,tsx,json}": [
+    "packages/**/*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write",
       "yarn test:staged"
