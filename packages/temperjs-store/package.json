@@ -1,5 +1,6 @@
 {
   "name": "temperjs-store",
+  "private": false,
   "version": "1.0.0",
   "description": "State container for JavaScript apps",
   "homepage": "https://temperjs.org",

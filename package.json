@@ -1,13 +1,16 @@
 {
-  "private": true,
   "name": "temperjs",
+  "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/temperjs-store", "packages/temperjs"
   ],
   "scripts": {
-    "build": "yarn --cwd packages/temperjs-store build && yarn --cwd packages/temperjs build",
-    "test": "yarn --cwd packages/temperjs-store test && yarn --cwd packages/temperjs test",
-    "lint": "yarn --cwd packages/temperjs-store lint && yarn --cwd packages/temperjs lint"
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "publish-all": "lerna publish"
   },
-  "version": "1.0.0"
+  "devDependencies": {
+    "lerna": "^3.22.1"
+  }
 }

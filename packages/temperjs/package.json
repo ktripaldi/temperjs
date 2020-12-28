@@ -1,5 +1,6 @@
 {
   "name": "temperjs",
+  "private": false,
   "version": "1.0.0",
   "description": "State management for React, made simple.",
   "homepage": "https://temperjs.org",
