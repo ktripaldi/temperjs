@@ -8,3 +8,5 @@ es
 types
 
 yarn-error.log
+
+.eslintcache
