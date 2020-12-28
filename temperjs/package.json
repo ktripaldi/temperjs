@@ -36,7 +36,8 @@
     "test:watch": "yarn run test --watchAll",
     "test:cov": "yarn run test --coverage",
     "format": "prettier --write \"src/**/*.ts\" \"**/*.md\"",
-    "lint": "eslint --ext ts src"
+    "lint": "eslint --ext ts src",
+    "prepare": "yarn run lint && yarn run test && yarn run build"
   },
   "peerDependencies": {
     "react": "17.0.1"
