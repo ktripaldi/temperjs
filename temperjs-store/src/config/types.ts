@@ -1,13 +1,9 @@
-export type Trait<T> = T | Promise<T> | undefined
-
 export type SetterHelpers<T> = {
-  value: Trait<T>
+  value: T
   get(path: string): unknown
 }
 
-export type SetterValue<T> =
-  | Trait<T>
-  | ((helpers: SetterHelpers<T>) => Trait<T>)
+export type SetterValue<T> = T | ((helpers: SetterHelpers<T>) => T)
 
 export type RegisterTraitOptions = {
   ignorePrevious: boolean
@@ -75,12 +71,12 @@ export type Store = {
 
 export type StoreActions = {
   create(options?: StoreOptions): void
-  getTrait<T>(path: string): Trait<T>
+  getTrait<T>(path: string): T | undefined
   setTrait<T>(path: string, traitValue: SetterValue<T>): void
   subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: Trait<T>) => void,
-    defaultValue?: Trait<T>
+    callback: (traitValue: T | undefined) => void,
+    defaultValue?: T
   ): Subscription | undefined
   destroy(): void
 }

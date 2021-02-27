@@ -1,4 +1,4 @@
-import { Trait, SetterValue } from 'temperjs-store'
+import { SetterValue } from 'temperjs-store'
 
 export enum LoadableState {
   HAS_VALUE = 'hasValue',
@@ -8,10 +8,10 @@ export enum LoadableState {
 
 export type Loadable<T> = {
   state: LoadableState
-  value: Trait<T> | Error
+  value: T | Promise<T> | Error
 }
 
-export type SubscribedTrait<T> = Trait<T> | Loadable<T>
+export type SubscribedTrait<T> = T | Loadable<T> | undefined
 
 export type Setter<T> = (traitValue: SetterValue<T>) => void
 
@@ -22,6 +22,6 @@ export type AsyncWithSetter<T> = [Promise<T>, Setter<Promise<T>>]
 export type LoadableWithSetter<T> = [Loadable<T>, Setter<Promise<T>>]
 
 export type SubscriptionOptions<T> = {
-  default?: Trait<T>
+  default?: T
   loadable?: boolean
 }

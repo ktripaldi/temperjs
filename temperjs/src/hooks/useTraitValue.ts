@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { storeActions, Trait } from 'temperjs-store'
+import { storeActions } from 'temperjs-store'
 import {
   LoadableState,
   SubscribedTrait,
@@ -13,11 +13,8 @@ import {
  * @param {SubscriptionOptions} [options] - These are the options of your subscription
  * @returns {SubscribedTrait<T>} This is the up-to-date value of the Trait
  */
-function useTraitValue<T>(path: string): Trait<T>
-function useTraitValue<T>(
-  path: string,
-  options?: { default?: Trait<T> }
-): Trait<T>
+function useTraitValue<T>(path: string): T | undefined
+function useTraitValue<T>(path: string, options: { default: T }): T
 function useTraitValue<T>(
   path: string,
   options?: SubscriptionOptions<T>
@@ -41,8 +38,8 @@ function useTraitValue<T>(
     }
   }, [])
 
-  if (options?.loadable && typeof (trait as Promise<T>)?.then === 'function') {
-    ;(trait as Promise<T>)
+  if (options?.loadable && trait instanceof Promise) {
+    trait
       .then(resolve => {
         setTrait({
           state: LoadableState.HAS_VALUE,

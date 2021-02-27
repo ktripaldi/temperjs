@@ -1,7 +1,6 @@
 import MESSAGES from '../config/messages'
 import createSubject from './rxSubject'
 import {
-  Trait,
   SetterValue,
   RegisterTraitOptions,
   Subscription,
@@ -193,7 +192,7 @@ const storeActions: StoreActions = (function () {
   function resolveTrait<T>(
     path: string,
     options?: ResolveTraitOptions
-  ): Trait<T> | undefined {
+  ): T | undefined {
     // If `options.tiedPath` is set, we need to register that Trait as a selector
     if (options?.tiedPath !== undefined) {
       const selector = getSelector(options.tiedPath)
@@ -213,7 +212,7 @@ const storeActions: StoreActions = (function () {
       }
       store!.tiedTraits.set(path, getTiedTraits(path).add(options.tiedPath))
     }
-    return readTrait(path) as Trait<T>
+    return readTrait(path) as T
   }
 
   // Verifies that the path is a non empty string
@@ -243,7 +242,7 @@ const storeActions: StoreActions = (function () {
 
     // If `traitValue` is a function, we need to call it so we can evaluate the result.
     // To do so, we need to inject an object containing the current Trait value and a method to get any other Trait
-    const newValue: Trait<T> =
+    const newValue: T =
       typeof traitValue === 'function'
         ? (traitValue as Function)({
             value: currentValue,
@@ -285,7 +284,7 @@ const storeActions: StoreActions = (function () {
     if (isObject) {
       // Object Traits are sealed to avoid any loss of information
       if (!Object.isSealed(newValue)) Object.seal(newValue)
-      Object.keys(newValue as object).forEach(key =>
+      Object.keys(newValue as {}).forEach(key =>
         registerTrait(
           `${path}${store!.pathSeparator}${key}`,
           (newValue as Record<string, unknown>)[key]
@@ -353,7 +352,7 @@ const storeActions: StoreActions = (function () {
   }
 
   // Returns the value of a Trait
-  function getTrait<T>(path: string): Trait<T> | undefined {
+  function getTrait<T>(path: string): T | undefined {
     // If the store has not been created yet, we'll throw an error
     if (!store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)
     // If the provided `path` is not a populated string, we'll throw an error
@@ -387,8 +386,8 @@ const storeActions: StoreActions = (function () {
   // Subscribes a callback to a Trait and returns a `Subscription` object
   function subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: Trait<T>) => void,
-    defaultValue?: Trait<T>
+    callback: (traitValue: T | undefined) => void,
+    defaultValue?: T
   ): Subscription | undefined {
     // If the store has not been created yet, we'll throw an error
     if (!store) throw new Error(MESSAGES.ERRORS.NO_STORE_FOUND)

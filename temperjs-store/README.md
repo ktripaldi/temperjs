@@ -49,12 +49,12 @@ Temper Store exports an object with the following interface (more details on eac
 ```typescript
 interface StoreActions = {
   create(options?: StoreOptions): void
-  getTrait<T>(path: string): Trait<T>
+  getTrait<T>(path: string): T | undefined
   setTrait<T>(path: string, traitValue: SetterValue<T>): void
   subscribeToTrait<T>(
     path: string,
-    callback: (traitValue: Trait<T>) => void,
-    defaultValue?: Trait<T>
+    callback: (traitValue: T | undefined) => void,
+    defaultValue?: T
   ): Subscription | undefined
   destroy(): void
 }
