@@ -13,20 +13,24 @@ import { SubscriptionOptions, SubscribedTrait, Setter } from '../config/types'
  * @param {SubscriptionOptions} [options] - These are the options of your subscription
  * @returns {[SubscribedTrait<T>, (traitValue: SetterValue<T>) => void]} This is the result of `useTraitValue` and a memoized reference to `setTrait`
  */
-function useTrait<T>(path: string): [T | undefined, Setter<T>]
-function useTrait<T>(path: string, options: { default: T }): [T, Setter<T>]
+function useTrait<T>(path: string): [T | undefined, Setter<T | undefined>]
+function useTrait<T>(
+  path: string,
+  options: { default: T }
+): [T, Setter<T | undefined>]
 function useTrait<T>(
   path: string,
   options?: SubscriptionOptions<T>
-): [SubscribedTrait<T>, Setter<T>]
+): [SubscribedTrait<T>, Setter<T | undefined>]
 function useTrait<T>(
   path: string,
   options?: SubscriptionOptions<T>
-): [SubscribedTrait<T>, Setter<T>] {
+): [SubscribedTrait<T>, Setter<T | undefined>] {
   return [
     useTraitValue<T>(path, options),
     React.useCallback(
-      (traitValue: SetterValue<T>): void => setTrait<T>(path, traitValue),
+      (traitValue: SetterValue<T | undefined>): void =>
+        setTrait<T | undefined>(path, traitValue),
       []
     )
   ]
